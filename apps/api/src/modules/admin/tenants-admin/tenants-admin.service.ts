@@ -125,11 +125,8 @@ export class TenantsAdminService {
     // 4. Create anio_escolar_config
     const anioResult = await this.prisma.$queryRawUnsafe<Array<{ id: string }>>(
       `INSERT INTO "${slug}".anio_escolar_config (anio, fecha_inicio, fecha_fin, activo)
-       VALUES ($1, $2, $3, true)
-       RETURNING id`,
-      dto.anioEscolar,
-      dto.fechaInicio,
-      dto.fechaFin,
+       VALUES (${dto.anioEscolar}, '${dto.fechaInicio}', '${dto.fechaFin}', true)
+       RETURNING id`
     );
     const anioEscolarId = anioResult[0].id;
 
@@ -144,10 +141,7 @@ export class TenantsAdminService {
       const regimen = regimenMap[nivel] ?? 'BIMESTRAL';
       await this.prisma.$executeRawUnsafe(
         `INSERT INTO "${slug}".regimen_config (anio_escolar_id, nivel, tipo_regimen)
-         VALUES ($1, $2::public.nivel_educativo, $3::"${slug}".tipo_regimen)`,
-        anioEscolarId,
-        nivel,
-        regimen,
+         VALUES ('${anioEscolarId}', '${nivel}'::public.nivel_educativo, '${regimen}'::"${slug}".tipo_regimen)`
       );
     }
 

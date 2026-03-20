@@ -53,18 +53,29 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { ChevronLeftIcon, ChevronRightIcon, LogOutIcon, LayoutDashboardIcon } from 'lucide-vue-next';
-import { useAuthStore } from '../../stores/auth.store';
-import { useUiStore } from '../../stores/ui.store';
-import SidebarItem from './SidebarItem.vue';
+import { 
+  ChevronLeftIcon, 
+  ChevronRightIcon, 
+  LogOutIcon, 
+  LayoutDashboardIcon,
+  SettingsIcon
+} from 'lucide-vue-next';
 
 const authStore = useAuthStore();
 const uiStore = useUiStore();
 const router = useRouter();
 
-const menuItems = computed(() => [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
-]);
+const menuItems = computed(() => {
+  const items = [
+    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
+  ];
+
+  if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
+    items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
+  }
+
+  return items;
+});
 
 function formatRol(rol?: string): string {
   const mapa: Record<string, string> = {

@@ -12,6 +12,17 @@ apiClient.interceptors.request.use((config) => {
   if (auth.accessToken) {
     config.headers.Authorization = `Bearer ${auth.accessToken}`;
   }
+
+  // Extraer slug del subdominio (ej: esther_carson.sige.edu.pe -> esther_carson)
+  const hostname = window.location.hostname;
+  const parts = hostname.split('.');
+  if (parts.length >= 3) {
+    const slug = parts[0];
+    if (slug !== 'admin' && slug !== 'www') {
+      config.headers['x-tenant-slug'] = slug;
+    }
+  }
+
   return config;
 });
 

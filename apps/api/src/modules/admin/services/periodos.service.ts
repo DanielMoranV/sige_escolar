@@ -37,18 +37,14 @@ export class PeriodosService {
       const periodos = this.calcularPeriodos(nivel, regimen, fechaInicio, fechaFin, ordenGlobal);
 
       for (const periodo of periodos) {
+        const fechaInicioStr = periodo.fechaInicio.toISOString().split('T')[0];
+        const fechaFinStr = periodo.fechaFin.toISOString().split('T')[0];
+
         await this.prisma.$executeRawUnsafe(
           `INSERT INTO "${slug}".periodos
              (anio_escolar_id, nivel, codigo, nombre, orden, fecha_inicio, fecha_fin, estado)
-           VALUES ($1, $2::public.nivel_educativo, $3, $4, $5, $6, $7, 'FUTURO'::"${slug}".estado_periodo)
-           ON CONFLICT (anio_escolar_id, nivel, codigo) DO NOTHING`,
-          anioEscolarId,
-          periodo.nivel,
-          periodo.codigo,
-          periodo.nombre,
-          periodo.orden,
-          periodo.fechaInicio.toISOString().split('T')[0],
-          periodo.fechaFin.toISOString().split('T')[0],
+           VALUES ('${anioEscolarId}', '${periodo.nivel}'::public.nivel_educativo, '${periodo.codigo}', '${periodo.nombre}', ${periodo.orden}, '${fechaInicioStr}', '${fechaFinStr}', 'FUTURO'::"${slug}".estado_periodo)
+           ON CONFLICT (anio_escolar_id, nivel, codigo) DO NOTHING`
         );
       }
 

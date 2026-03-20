@@ -107,6 +107,7 @@ model Usuario {
   activo        Boolean     @default(true)
   ultimo_acceso DateTime?   @db.Timestamptz
   refresh_token_hash String? @db.VarChar(200)
+  needs_password_change Boolean @default(true)
   created_at    DateTime    @default(now()) @db.Timestamptz
   updated_at    DateTime    @updatedAt @db.Timestamptz
   deleted_at    DateTime?   @db.Timestamptz

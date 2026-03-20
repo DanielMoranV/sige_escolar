@@ -71,27 +71,19 @@ export class TenantSeedService {
       const areaResult = await this.prisma.$queryRawUnsafe<Array<{ id: string }>>(
         `INSERT INTO "${slug}".areas_ie
            (anio_escolar_id, area_cneb_id, nombre_display, codigo_display, nivel, es_area_cneb, orden, permite_exoneracion, es_calificable, peso_area, activa)
-         VALUES ($1, $2, $3, $4, $5::public.nivel_educativo, true, $6, $7, true, 1.00, true)
+         VALUES ('${anioEscolarId}', '${area.id}', '${area.nombre}', '${area.codigo}', '${area.nivel}'::public.nivel_educativo, true, ${area.orden}, ${area.permite_exoneracion ?? false}, true, 1.00, true)
          ON CONFLICT (anio_escolar_id, nombre_display, nivel) DO UPDATE SET area_cneb_id = EXCLUDED.area_cneb_id
-         RETURNING id`,
-        anioEscolarId,
-        area.id,
-        area.nombre,
-        area.codigo,
-        area.nivel,
-        area.orden,
-        area.permite_exoneracion ?? false,
+         RETURNING id`
       );
 
       if (!areaResult || areaResult.length === 0) continue;
       const areaIeId = areaResult[0].id;
 
-      // Get competencias — column is 'area_id' per the Prisma schema mapping competencias_cneb
+      // Get competencias
       const competencias = await this.prisma.$queryRawUnsafe<
         Array<{ id: string; nombre: string; orden: number; aplica_grados: number[] }>
       >(
-        `SELECT id, nombre, orden, aplica_grados FROM public.competencias_cneb WHERE area_id = $1 AND activo = true ORDER BY orden`,
-        area.id,
+        `SELECT id, nombre, orden, aplica_grados FROM public.competencias_cneb WHERE area_id = '${area.id}' AND activo = true ORDER BY orden`
       );
 
       if (!competencias || competencias.length === 0) continue;
@@ -106,13 +98,8 @@ export class TenantSeedService {
         await this.prisma.$executeRawUnsafe(
           `INSERT INTO "${slug}".competencias_ie
              (area_ie_id, competencia_cneb_id, nombre_display, orden, peso_competencia, aplica_grados, activa)
-           VALUES ($1, $2, $3, $4, 1.00, $5, true)
-           ON CONFLICT (area_ie_id, orden) DO NOTHING`,
-          areaIeId,
-          comp.id,
-          comp.nombre,
-          comp.orden,
-          aplicaGradosLiteral,
+           VALUES ('${areaIeId}', '${comp.id}', '${comp.nombre.replace(/'/g, "''")}', ${comp.orden}, 1.00, '${aplicaGradosLiteral}', true)
+           ON CONFLICT (area_ie_id, orden) DO NOTHING`
         );
       }
     }

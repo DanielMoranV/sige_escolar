@@ -26,4 +26,21 @@ export class AuthController {
   me(@CurrentUser() user: any) {
     return this.authService.me(user.id);
   }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refresh(@Body('refreshToken') refreshToken: string, @Body('userId') userId: string) {
+    return this.authService.refreshToken(userId, refreshToken);
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  changePassword(
+    @CurrentUser() user: any,
+    @Body('currentPassword') currentPass: string,
+    @Body('newPassword') newPass: string,
+  ) {
+    return this.authService.changePassword(user.id, currentPass, newPass);
+  }
 }

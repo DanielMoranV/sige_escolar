@@ -17,14 +17,15 @@ export class TenantMigrationService {
       path.resolve(__dirname, '..', '..', '..', '..', '..', '..', 'prisma', 'tenant-schema.sql');
     const rawSql = fs.readFileSync(sqlFilePath, 'utf-8');
 
-    // Replace all {SCHEMA} placeholders with the actual slug
-    const populatedSql = rawSql.replace(/\{SCHEMA\}/g, slug);
-
-    // Split into individual statements
-    const statements = populatedSql
-      .split(/;\s*\n/)
+    // Split into individual statements - handle different line endings and comments
+    const statements = rawSql
+      .split(/;\s*(?:\r\n|\n|\r|$)/)
       .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !s.startsWith('--'));
+      // Filter out empty blocks or blocks that are only comments
+      .filter((s) => s.length > 0 && !s.split('\n').every(line => line.trim().startsWith('--')))
+      .map(s => s.replace(/\{SCHEMA\}/g, slug));
+
+    this.logger.log(`[${slug}] Encontradas ${statements.length} sentencias SQL para ejecutar`);
 
     // Postgres error codes safe to ignore (object already exists — idempotency)
     const IGNORABLE_CODES = new Set(['42710', '42P07', '42723', '42701']);
@@ -33,6 +34,7 @@ export class TenantMigrationService {
       const cleanStatement = statement.endsWith(';') ? statement : `${statement};`;
       try {
         await this.prisma.$executeRawUnsafe(cleanStatement);
+        this.logger.log(`[${slug}] Executed: ${cleanStatement.substring(0, 60)}...`);
       } catch (error) {
         // Prisma wraps PostgreSQL error codes inside meta.code
         const pgCode: string | undefined = (error as any)?.meta?.code ?? (error as any)?.code;
@@ -40,7 +42,7 @@ export class TenantMigrationService {
           this.logger.warn(`[${slug}] Skipping existing object (${pgCode}): ${cleanStatement.substring(0, 60)}...`);
           continue;
         }
-        this.logger.error(`Failed: ${cleanStatement.substring(0, 100)}...`);
+        this.logger.error(`Failed: ${cleanStatement.substring(0, 200)}...\nError code: ${(error as any)?.meta?.code}\nError msg:  ${(error as any)?.meta?.message ?? (error as any)?.message}`);
         throw error;
       }
     }

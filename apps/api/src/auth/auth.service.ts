@@ -21,7 +21,12 @@ export class AuthService {
     const passwordValida = await bcrypt.compare(dto.password, user.password_hash);
     if (!passwordValida) throw new UnauthorizedException('Credenciales incorrectas');
 
-    const payload = { sub: user.id, tenantId: user.tenant_id, rol: user.rol };
+    const payload = { 
+      sub: user.id, 
+      tenantId: user.tenant_id, 
+      rol: user.rol,
+      needsChange: user.needs_password_change 
+    };
 
     const accessToken = this.jwt.sign(payload, { expiresIn: '15m' });
     const refreshToken = this.jwt.sign(
@@ -45,8 +50,52 @@ export class AuthService {
         apellidos: user.apellidos,
         rol: user.rol,
         tenantId: user.tenant_id,
+        needsPasswordChange: user.needs_password_change,
       },
     };
+  }
+
+  async refreshToken(userId: string, token: string) {
+    const user = await this.prisma.usuario.findUnique({
+      where: { id: userId, activo: true, deleted_at: null },
+    });
+
+    if (!user || !user.refresh_token_hash) {
+      throw new UnauthorizedException('Acceso denegado');
+    }
+
+    const isMatch = await bcrypt.compare(token, user.refresh_token_hash);
+    if (!isMatch) throw new UnauthorizedException('Token inválido');
+
+    const payload = { 
+      sub: user.id, 
+      tenantId: user.tenant_id, 
+      rol: user.rol,
+      needsChange: user.needs_password_change 
+    };
+
+    return {
+      accessToken: this.jwt.sign(payload, { expiresIn: '15m' }),
+    };
+  }
+
+  async changePassword(userId: string, currentPass: string, newPass: string) {
+    const user = await this.prisma.usuario.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('Usuario no encontrado');
+
+    const isMatch = await bcrypt.compare(currentPass, user.password_hash);
+    if (!isMatch) throw new UnauthorizedException('Contraseña actual incorrecta');
+
+    const newHash = await bcrypt.hash(newPass, 10);
+    await this.prisma.usuario.update({
+      where: { id: userId },
+      data: { 
+        password_hash: newHash,
+        needs_password_change: false 
+      },
+    });
+
+    return { message: 'Contraseña actualizada correctamente' };
   }
 
   async logout(userId: string) {

@@ -8,6 +8,7 @@ interface AuthUser {
   apellidos: string;
   rol: string;
   tenantId: string | null;
+  needsPasswordChange?: boolean;
 }
 
 interface AuthState {
@@ -27,6 +28,7 @@ export const useAuthStore = defineStore('auth', {
     isSuperAdmin: (state) => state.user?.rol === 'SUPER_ADMIN',
     isDirector: (state) => state.user?.rol === 'DIRECTOR',
     fullName: (state) => state.user ? `${state.user.nombres} ${state.user.apellidos}` : '',
+    mustChangePassword: (state) => state.user?.needsPasswordChange === true,
   },
   actions: {
     async login(email: string, password: string) {
@@ -42,8 +44,15 @@ export const useAuthStore = defineStore('auth', {
       this.refreshToken = null;
     },
     async refreshTokens() {
-      // En v1 simplista — re-login no implementado aún, lanzar error
-      throw new Error('Refresh no implementado');
+      if (!this.refreshToken || !this.user) throw new Error('No refresh token');
+      const result = await authService.refreshToken(this.user.id, this.refreshToken);
+      this.accessToken = result.accessToken;
+    },
+    async changePassword(current: string, newPass: string) {
+      await authService.changePassword(current, newPass);
+      if (this.user) {
+        this.user.needsPasswordChange = false;
+      }
     },
   },
   persist: true,
