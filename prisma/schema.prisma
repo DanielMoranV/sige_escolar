@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────────────────────
+
+enum RolUsuario {
+  SUPER_ADMIN
+  DIRECTOR
+  SUBDIRECTOR
+  DOCENTE_TUTOR
+  DOCENTE_AREA
+  SECRETARIA
+  APODERADO
+  ESTUDIANTE
+}
+
+enum NivelEducativo {
+  INICIAL
+  PRIMARIA
+  SECUNDARIA
+}
+
+// ─── SCHEMA PUBLIC ───────────────────────────────────────────────────────────
+
+model Tenant {
+  id           String   @id @default(uuid()) @db.Uuid
+  slug         String   @unique @db.VarChar(50)
+  nombre       String   @db.VarChar(200)
+  nombre_corto String?  @db.VarChar(80)
+  activo       Boolean  @default(true)
+  plan         String   @default("basico") @db.VarChar(30)
+  schema_name  String   @unique @db.VarChar(63)
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @updatedAt @db.Timestamptz
+
+  usuarios         Usuario[]
+  datos_minedu     TenantDatosMinedu?
+  pdf_config       TenantPdfConfig?
+
+  @@index([slug])
+  @@index([activo])
+  @@map("tenants")
+}
+
+model TenantDatosMinedu {
+  tenant_id           String   @id @db.Uuid
+  codigo_modular      String   @db.VarChar(7)
+  anexo               String   @default("0") @db.VarChar(5)
+  codigo_local        String?  @db.VarChar(10)
+  nombre_oficial      String   @db.VarChar(200)
+  dre_codigo          String?  @db.VarChar(10)
+  dre_nombre          String?  @db.VarChar(200)
+  ugel_codigo         String?  @db.VarChar(10)
+  ugel_nombre         String?  @db.VarChar(200)
+  ubigeo_distrito     String?  @db.VarChar(6)
+  tipo_gestion        String   @default("PRIVADA") @db.VarChar(20)
+  modalidad           String   @default("EBR") @db.VarChar(10)
+  director_dni        String?  @db.VarChar(8)
+  director_nombres    String?  @db.VarChar(200)
+  director_apellidos  String?  @db.VarChar(200)
+  director_cargo      String   @default("Director(a)") @db.VarChar(100)
+  firma_url           String?  @db.VarChar(500)
+  updated_at          DateTime @updatedAt @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id])
+
+  @@unique([codigo_modular, anexo])
+  @@map("tenant_datos_minedu")
+}
+
+model TenantPdfConfig {
+  tenant_id               String   @id @db.Uuid
+  logo_url                String?  @db.VarChar(500)
+  color_primario          String   @default("#1A5276") @db.VarChar(7)
+  color_secundario        String   @default("#2E86C1") @db.VarChar(7)
+  nombre_director_display String?  @db.VarChar(200)
+  pie_documento           String?
+  mostrar_foto_estudiante Boolean  @default(false)
+  incluir_asistencia      Boolean  @default(true)
+  incluir_firma_apoderado Boolean  @default(true)
+  escala_interna          String?  @db.VarChar(20)
+  updated_at              DateTime @updatedAt @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id])
+
+  @@map("tenant_pdf_config")
+}
+
+model Usuario {
+  id            String      @id @default(uuid()) @db.Uuid
+  tenant_id     String?     @db.Uuid
+  email         String      @db.VarChar(200)
+  password_hash String      @db.VarChar(200)
+  rol           RolUsuario
+  nombres       String      @db.VarChar(200)
+  apellidos     String      @db.VarChar(200)
+  dni           String?     @db.VarChar(15)
+  telefono      String?     @db.VarChar(20)
+  activo        Boolean     @default(true)
+  ultimo_acceso DateTime?   @db.Timestamptz
+  refresh_token_hash String? @db.VarChar(200)
+  created_at    DateTime    @default(now()) @db.Timestamptz
+  updated_at    DateTime    @updatedAt @db.Timestamptz
+  deleted_at    DateTime?   @db.Timestamptz
+
+  tenant Tenant? @relation(fields: [tenant_id], references: [id])
+
+  @@unique([email, tenant_id])
+  @@index([tenant_id])
+  @@index([tenant_id, rol])
+  @@map("usuarios")
+}
+
+model AreaCneb {
+  id                  String         @id @default(uuid()) @db.Uuid
+  codigo              String         @unique @db.VarChar(20)
+  nombre              String         @db.VarChar(100)
+  nivel               NivelEducativo
+  orden               Int            @db.SmallInt
+  permite_exoneracion Boolean        @default(false)
+  es_calificable      Boolean        @default(true)
+  activo              Boolean        @default(true)
+
+  competencias CompetenciaCneb[]
+
+  @@map("areas_cneb")
+}
+
+model CompetenciaCneb {
+  id           String   @id @default(uuid()) @db.Uuid
+  area_id      String   @db.Uuid
+  codigo       String   @unique @db.VarChar(30)
+  nombre       String
+  orden        Int      @db.SmallInt
+  aplica_grados Int[]
+  activo       Boolean  @default(true)
+
+  area AreaCneb @relation(fields: [area_id], references: [id])
+
+  @@unique([area_id, orden])
+  @@index([area_id])
+  @@map("competencias_cneb")
+}
+
+model FeriadoNacional {
+  id          String  @id @default(uuid()) @db.Uuid
+  fecha       DateTime @db.Date
+  nombre      String  @db.VarChar(100)
+  anio        Int     @db.SmallInt
+  obligatorio Boolean @default(true)
+
+  @@unique([fecha])
+  @@map("feriados_nacionales")
+}
+
+model Ubigeo {
+  codigo       String  @id @db.VarChar(6)
+  departamento String  @db.VarChar(100)
+  provincia    String? @db.VarChar(100)
+  distrito     String? @db.VarChar(100)
+  nivel        String  @db.VarChar(15)
+
+  @@map("ubigeos")
+}

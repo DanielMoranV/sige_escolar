@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "@sige/types": ["../../packages/types/src"],
+      "@sige/utils": ["../../packages/utils/src"]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sige-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sige
+      POSTGRES_PASSWORD: sige
+      POSTGRES_DB: sige_escolar
+    ports:
+      - "5436:5432"
+    volumes:
+      - sige_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sige -d sige_escolar"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: sige-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - sige_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  sige_postgres_data:
+  sige_redis_data:
