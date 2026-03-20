@@ -12,8 +12,6 @@ export class TenantMigrationService {
   async applyToSchema(slug: string): Promise<void> {
     this.logger.log(`Applying tenant schema to: ${slug}`);
 
-    // __dirname = apps/api/dist/modules/admin/services (compiled) or src/... (ts-node)
-    // Go up 6 levels to reach the monorepo root
     const sqlFilePath =
       process.env.TENANT_SCHEMA_SQL_PATH ??
       path.resolve(__dirname, '..', '..', '..', '..', '..', '..', 'prisma', 'tenant-schema.sql');
@@ -22,18 +20,27 @@ export class TenantMigrationService {
     // Replace all {SCHEMA} placeholders with the actual slug
     const populatedSql = rawSql.replace(/\{SCHEMA\}/g, slug);
 
-    // Split into individual statements (split on semicolons followed by newlines or end of string)
+    // Split into individual statements
     const statements = populatedSql
       .split(/;\s*\n/)
       .map((s) => s.trim())
       .filter((s) => s.length > 0 && !s.startsWith('--'));
+
+    // Postgres error codes safe to ignore (object already exists — idempotency)
+    const IGNORABLE_CODES = new Set(['42710', '42P07', '42723', '42701']);
 
     for (const statement of statements) {
       const cleanStatement = statement.endsWith(';') ? statement : `${statement};`;
       try {
         await this.prisma.$executeRawUnsafe(cleanStatement);
       } catch (error) {
-        this.logger.error(`Failed to execute statement: ${cleanStatement.substring(0, 100)}...`);
+        // Prisma wraps PostgreSQL error codes inside meta.code
+        const pgCode: string | undefined = (error as any)?.meta?.code ?? (error as any)?.code;
+        if (pgCode && IGNORABLE_CODES.has(pgCode)) {
+          this.logger.warn(`[${slug}] Skipping existing object (${pgCode}): ${cleanStatement.substring(0, 60)}...`);
+          continue;
+        }
+        this.logger.error(`Failed: ${cleanStatement.substring(0, 100)}...`);
         throw error;
       }
     }

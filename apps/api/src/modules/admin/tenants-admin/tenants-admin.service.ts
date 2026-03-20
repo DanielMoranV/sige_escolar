@@ -270,6 +270,22 @@ export class TenantsAdminService {
       // Upsert anio_escolar_config — create if not exists, update dates if provided
       let anioConfig: { id: string; fecha_inicio: string; fecha_fin: string } | null = null;
       try {
+        // First, check if tables exist in this schema, and run migration if they don't
+        const tableCheck = await this.prisma.$queryRawUnsafe<any[]>(
+          `SELECT EXISTS (
+             SELECT 1 FROM information_schema.tables
+             WHERE table_schema = $1 AND table_name = 'anio_escolar_config'
+           ) AS exists`,
+          slug,
+        );
+        const tablesExist = tableCheck[0]?.exists === true;
+
+        if (!tablesExist) {
+          this.logger.log(`[${slug}] Schema sin tablas — aplicando migración...`);
+          await this.tenantMigration.applyToSchema(slug);
+          this.logger.log(`[${slug}] Migración aplicada correctamente`);
+        }
+
         // Try to get existing one first (prefer activo=true, then most recent)
         const existing = await this.prisma.$queryRawUnsafe<any[]>(
           `SELECT id, fecha_inicio::text, fecha_fin::text FROM "${slug}".anio_escolar_config

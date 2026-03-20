@@ -20,10 +20,12 @@ enum RolUsuario {
   ESTUDIANTE
 }
 
-enum NivelEducativo {
+enum nivel_educativo {
   INICIAL
   PRIMARIA
   SECUNDARIA
+
+  @@map("nivel_educativo")
 }
 
 // ─── SCHEMA PUBLIC ───────────────────────────────────────────────────────────
@@ -121,7 +123,7 @@ model AreaCneb {
   id                  String         @id @default(uuid()) @db.Uuid
   codigo              String         @unique @db.VarChar(20)
   nombre              String         @db.VarChar(100)
-  nivel               NivelEducativo
+  nivel               nivel_educativo
   orden               Int            @db.SmallInt
   permite_exoneracion Boolean        @default(false)
   es_calificable      Boolean        @default(true)

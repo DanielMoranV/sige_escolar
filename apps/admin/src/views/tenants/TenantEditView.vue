@@ -70,6 +70,46 @@
         </div>
       </div>
 
+      <!-- Sección: Año Escolar -->
+      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <p class="text-sm font-semibold text-gray-700">Año escolar activo</p>
+        </div>
+        <div class="p-4 space-y-4">
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-1 block">Año</label>
+              <input
+                type="number"
+                v-model.number="form.anioEscolar"
+                min="2020"
+                max="2099"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-1 block">Fecha de inicio</label>
+              <input
+                type="date"
+                v-model="form.fechaInicio"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-700 mb-1 block">Fecha de fin</label>
+              <input
+                type="date"
+                v-model="form.fechaFin"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <p class="text-xs text-gray-400">
+            Si el colegio no tiene un año escolar configurado se creará automáticamente con estos valores.
+          </p>
+        </div>
+      </div>
+
       <!-- Sección: Niveles y régimen -->
       <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -320,20 +360,19 @@ const updateMutation = useMutation({
 
 function save() {
   if (!validate()) return;
-  const { regimenes, nivelesSeleccionados, ...rest } = form.value;
+  const { regimenes, nivelesSeleccionados, anioEscolar, fechaInicio, fechaFin, ...rest } = form.value;
 
   const payload = Object.assign({}, rest, {
     niveles: nivelesSeleccionados,
     regimenPrimaria: regimenes['PRIMARIA'],
     regimenSecundaria: regimenes['SECUNDARIA'],
     regimenInicial: regimenes['INICIAL'],
+    anioEscolar,
+    fechaInicio,
+    fechaFin,
   });
 
-  console.log('[TenantEdit] Guardando niveles educativos:', {
-    nivelesSeleccionados,
-    regimenes,
-    payload,
-  });
+  console.log('[TenantEdit] Guardando payload:', payload);
 
   updateMutation.mutate(payload);
 }

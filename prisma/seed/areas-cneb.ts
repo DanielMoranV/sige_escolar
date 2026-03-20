@@ -13,7 +13,12 @@ export async function seedAreasCneb(prisma: PrismaClient) {
     { codigo: 'EF_P', nombre: 'Educación Física', nivel: 'PRIMARIA' as const, orden: 6, permite_exoneracion: true, es_calificable: true },
     { codigo: 'ER_P', nombre: 'Educación Religiosa', nivel: 'PRIMARIA' as const, orden: 7, permite_exoneracion: true, es_calificable: true },
     { codigo: 'TOE_P', nombre: 'Tutoría y Orientación Educativa', nivel: 'PRIMARIA' as const, orden: 8, permite_exoneracion: false, es_calificable: false },
-    // SECUNDARIA (10 áreas)
+    // INICIAL (4 áreas)
+    { codigo: 'COM_I', nombre: 'Comunicación', nivel: 'INICIAL' as const, orden: 1, permite_exoneracion: false, es_calificable: true },
+    { codigo: 'MAT_I', nombre: 'Matemática', nivel: 'INICIAL' as const, orden: 2, permite_exoneracion: false, es_calificable: true },
+    { codigo: 'PS_I', nombre: 'Personal Social', nivel: 'INICIAL' as const, orden: 3, permite_exoneracion: false, es_calificable: true },
+    { codigo: 'CYT_I', nombre: 'Ciencia y Tecnología', nivel: 'INICIAL' as const, orden: 4, permite_exoneracion: false, es_calificable: true },
+    // SECUNDARIA (11 áreas)
     { codigo: 'COM_S', nombre: 'Comunicación', nivel: 'SECUNDARIA' as const, orden: 1, permite_exoneracion: false, es_calificable: true },
     { codigo: 'ING_S', nombre: 'Inglés', nivel: 'SECUNDARIA' as const, orden: 2, permite_exoneracion: false, es_calificable: true },
     { codigo: 'MAT_S', nombre: 'Matemática', nivel: 'SECUNDARIA' as const, orden: 3, permite_exoneracion: false, es_calificable: true },
