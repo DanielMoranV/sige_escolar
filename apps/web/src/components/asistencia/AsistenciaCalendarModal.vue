@@ -128,7 +128,7 @@ const meses = computed(() => {
 
   const inicio = new Date(fechaInicio.value + 'T00:00:00');
   const fin = fechaFin.value ? new Date(fechaFin.value + 'T00:00:00') : new Date();
-  const result = [];
+  const result: { key: string; nombre: string; semanas: (DiaCalendario | null)[][] }[] = [];
 
   let cursor = new Date(inicio.getFullYear(), inicio.getMonth(), 1);
   const limiteMax = new Date(fin.getFullYear(), fin.getMonth(), 1);

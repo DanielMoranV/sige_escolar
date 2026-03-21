@@ -242,9 +242,9 @@ export class AsistenciaService {
     const data = await this.prisma.$queryRawUnsafe<any[]>(`
       SELECT 
         e.codigo_siagie, e.dni, e.apellido_paterno, e.apellido_materno, e.nombres,
-        COUNT(CASE WHEN a.estado IN ('PRESENTE', 'TARDANZA', 'LM') THEN 1 END) as asistencias,
-        COUNT(CASE WHEN a.estado = 'FALTA_JUSTIFICADA' THEN 1 END) as faltas_justificadas,
-        COUNT(CASE WHEN a.estado = 'FALTA_INJUSTIFICADA' THEN 1 END) as faltas_injustificadas
+        COUNT(CASE WHEN a.estado IN ('PRESENTE', 'TARDANZA', 'LICENCIA') THEN 1 END)::int as asistencias,
+        COUNT(CASE WHEN a.estado = 'FALTA_JUSTIFICADA' THEN 1 END)::int as faltas_justificadas,
+        COUNT(CASE WHEN a.estado = 'FALTA_INJUSTIFICADA' THEN 1 END)::int as faltas_injustificadas
       FROM "${slug}".matriculas m
       JOIN "${slug}".estudiantes e ON m.estudiante_id = e.id
       LEFT JOIN "${slug}".asistencia_diaria a ON m.id = a.matricula_id AND EXTRACT(MONTH FROM a.fecha) = ${mes}
@@ -253,11 +253,15 @@ export class AsistenciaService {
       ORDER BY e.apellido_paterno, e.apellido_materno
     `);
 
-    // Registrar intención de exportación al SIAGIE
-    await this.prisma.$executeRawUnsafe(`
-      INSERT INTO "${slug}".siagie_sync_log (modulo, anio_escolar_id, estado, generado_en)
-      VALUES ('ASISTENCIA', '${anioEscolarId}', 'GENERADO'::"${slug}".estado_sync, NOW())
-    `);
+    // Registrar intención de exportación al SIAGIE (no-crítico)
+    try {
+      await this.prisma.$executeRawUnsafe(`
+        INSERT INTO "${slug}".siagie_sync_log (modulo, anio_escolar_id, estado, generado_en)
+        VALUES ('ASISTENCIA', '${anioEscolarId}', 'GENERADO'::"${slug}".estado_sync, NOW())
+      `);
+    } catch {
+      this.logger.warn(`[${slug}] No se pudo registrar sync_log para asistencia — tabla puede no existir aún`);
+    }
 
     return this.excelService.generateAsistenciaExcel(data, mes, 20);
   }

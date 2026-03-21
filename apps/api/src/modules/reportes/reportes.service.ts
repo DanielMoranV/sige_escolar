@@ -70,10 +70,10 @@ export class ReportesService {
     // 5. Asistencia (resumen)
     const asistencia = await this.prisma.$queryRawUnsafe<any[]>(`
       SELECT 
-        COUNT(CASE WHEN estado = 'PRESENTE' THEN 1 END) as presentes,
-        COUNT(CASE WHEN estado = 'TARDANZA' THEN 1 END) as tardanzas,
-        COUNT(CASE WHEN estado = 'FALTA_JUSTIFICADA' THEN 1 END) as faltas_justificadas,
-        COUNT(CASE WHEN estado = 'FALTA_INJUSTIFICADA' THEN 1 END) as faltas_injustificadas
+        COUNT(CASE WHEN estado = 'PRESENTE' THEN 1 END)::int as presentes,
+        COUNT(CASE WHEN estado = 'TARDANZA' THEN 1 END)::int as tardanzas,
+        COUNT(CASE WHEN estado = 'FALTA_JUSTIFICADA' THEN 1 END)::int as faltas_justificadas,
+        COUNT(CASE WHEN estado = 'FALTA_INJUSTIFICADA' THEN 1 END)::int as faltas_injustificadas
       FROM "${slug}".asistencia_diaria
       WHERE matricula_id = '${matriculaId}'
         AND EXTRACT(MONTH FROM fecha) IN (
@@ -96,10 +96,10 @@ export class ReportesService {
     return this.prisma.$queryRawUnsafe<any[]>(`
       SELECT 
         a.nombre_display as area,
-        COUNT(CASE WHEN n.calificativo_literal = 'AD' OR n.calificativo_numerico >= 18 THEN 1 END) as nivel_destacado,
-        COUNT(CASE WHEN n.calificativo_literal = 'A' OR (n.calificativo_numerico >= 14 AND n.calificativo_numerico <= 17) THEN 1 END) as nivel_esperado,
-        COUNT(CASE WHEN n.calificativo_literal = 'B' OR (n.calificativo_numerico >= 11 AND n.calificativo_numerico <= 13) THEN 1 END) as nivel_proceso,
-        COUNT(CASE WHEN n.calificativo_literal = 'C' OR n.calificativo_numerico <= 10 THEN 1 END) as nivel_inicio
+        COUNT(CASE WHEN n.calificativo_literal = 'AD' OR n.calificativo_numerico >= 18 THEN 1 END)::int as nivel_destacado,
+        COUNT(CASE WHEN n.calificativo_literal = 'A' OR (n.calificativo_numerico >= 14 AND n.calificativo_numerico <= 17) THEN 1 END)::int as nivel_esperado,
+        COUNT(CASE WHEN n.calificativo_literal = 'B' OR (n.calificativo_numerico >= 11 AND n.calificativo_numerico <= 13) THEN 1 END)::int as nivel_proceso,
+        COUNT(CASE WHEN n.calificativo_literal = 'C' OR n.calificativo_numerico <= 10 THEN 1 END)::int as nivel_inicio
       FROM "${slug}".areas_ie a
       JOIN "${slug}".competencias_ie c ON c.area_ie_id = a.id
       JOIN "${slug}".notas_periodo n ON n.competencia_ie_id = c.id

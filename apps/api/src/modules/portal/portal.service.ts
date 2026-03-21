@@ -69,9 +69,9 @@ export class PortalService {
     // Resumen mensual
     const resumen = await this.prisma.$queryRawUnsafe<any[]>(`
       SELECT 
-        COUNT(CASE WHEN estado IN ('PRESENTE', 'TARDANZA', 'LM') THEN 1 END) as asistencias,
-        COUNT(CASE WHEN estado = 'FALTA_JUSTIFICADA' THEN 1 END) as faltas_justificadas,
-        COUNT(CASE WHEN estado = 'FALTA_INJUSTIFICADA' THEN 1 END) as faltas_injustificadas
+        COUNT(CASE WHEN estado IN ('PRESENTE', 'TARDANZA', 'LICENCIA') THEN 1 END)::int as asistencias,
+        COUNT(CASE WHEN estado = 'FALTA_JUSTIFICADA' THEN 1 END)::int as faltas_justificadas,
+        COUNT(CASE WHEN estado = 'FALTA_INJUSTIFICADA' THEN 1 END)::int as faltas_injustificadas
       FROM "${slug}".asistencia_diaria
       WHERE matricula_id = '${hijo.matricula_id}' 
         AND EXTRACT(MONTH FROM fecha) = EXTRACT(MONTH FROM CURRENT_DATE)

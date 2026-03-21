@@ -32,22 +32,34 @@ export class NotasService {
 
     // 3. Obtener notas existentes para este periodo y área (via competencias)
     const notas = await this.prisma.$queryRawUnsafe<any[]>(`
-      SELECT * FROM "${slug}".notas_periodo 
-      WHERE periodo_id = '${periodoId}' 
+      SELECT * FROM "${slug}".notas_periodo
+      WHERE periodo_id = '${periodoId}'
       AND competencia_ie_id IN (SELECT id FROM "${slug}".competencias_ie WHERE area_ie_id = '${areaId}')
     `);
+
+    // 4. Obtener conclusiones del periodo (de cualquier área) para mostrar la conclusión global
+    const conclusiones = await this.prisma.$queryRawUnsafe<any[]>(`
+      SELECT DISTINCT ON (matricula_id) matricula_id, conclusion_descriptiva
+      FROM "${slug}".notas_periodo
+      WHERE periodo_id = '${periodoId}' AND conclusion_descriptiva IS NOT NULL
+      ORDER BY matricula_id, ultima_modificacion DESC
+    `);
+
+    const conclusionMap = new Map<string, string>(
+      conclusiones.map(c => [String(c.matricula_id), c.conclusion_descriptiva])
+    );
 
     return {
       competencias,
       estudiantes: estudiantes.map(est => ({
         ...est,
+        conclusionDescriptiva: conclusionMap.get(String(est.matricula_id)) || '',
         notas: competencias.map(comp => {
-          const nota = notas.find(n => n.matricula_id === est.matricula_id && n.competencia_ie_id === comp.id);
+          const nota = notas.find(n => String(n.matricula_id) === String(est.matricula_id) && String(n.competencia_ie_id) === String(comp.id));
           return {
             competenciaIeId: comp.id,
             calificativoLiteral: nota?.calificativo_literal || null,
             calificativoNumerico: nota?.calificativo_numerico || null,
-            conclusionDescriptiva: nota?.conclusion_descriptiva || '',
           };
         }),
       })),
@@ -128,7 +140,8 @@ export class NotasService {
       JOIN "${slug}".estudiantes e ON m.estudiante_id = e.id
       JOIN "${slug}".secciones s ON m.seccion_id = s.id
       JOIN "${slug}".grados g ON s.grado_id = g.id
-      JOIN "${slug}".competencias_ie c ON c.area_ie_id IN (SELECT id FROM "${slug}".areas_ie WHERE anio_escolar_id = s.anio_escolar_id)
+      JOIN "${slug}".areas_ie a ON a.anio_escolar_id = s.anio_escolar_id
+      JOIN "${slug}".competencias_ie c ON c.area_ie_id = a.id
       LEFT JOIN "${slug}".notas_periodo n ON n.matricula_id = m.id AND n.competencia_ie_id = c.id AND n.periodo_id = '${periodoId}'
       WHERE m.seccion_id = '${seccionId}' AND m.estado = 'ACTIVA'
       ORDER BY e.apellido_paterno, e.apellido_materno, c.orden
@@ -138,11 +151,15 @@ export class NotasService {
     const anioEscolarId = periodo[0]?.anio_escolar_id;
     const generadoPor = usuarioId ? `'${usuarioId}'` : 'NULL';
 
-    // Log sync
-    await this.prisma.$executeRawUnsafe(`
-      INSERT INTO "${slug}".siagie_sync_log (modulo, periodo_id, anio_escolar_id, estado, generado_por, generado_en)
-      VALUES ('CALIFICACIONES', '${periodoId}', ${anioEscolarId ? `'${anioEscolarId}'` : 'NULL'}, 'GENERADO'::"${slug}".estado_sync, ${generadoPor}, NOW())
-    `);
+    // Log sync (no-crítico)
+    try {
+      await this.prisma.$executeRawUnsafe(`
+        INSERT INTO "${slug}".siagie_sync_log (modulo, periodo_id, anio_escolar_id, estado, generado_por, generado_en)
+        VALUES ('CALIFICACIONES', '${periodoId}', ${anioEscolarId ? `'${anioEscolarId}'` : 'NULL'}, 'GENERADO'::"${slug}".estado_sync, ${generadoPor}, NOW())
+      `);
+    } catch {
+      this.logger.warn(`[${slug}] No se pudo registrar sync_log para calificaciones`);
+    }
 
     return this.excelService.generateNotasExcel(data, periodo[0]?.nombre || 'Periodo');
   }

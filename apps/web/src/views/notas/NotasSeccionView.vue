@@ -251,7 +251,7 @@ async function cargarGrilla() {
     const data = await notasService.getGrilla(filters.value);
     data.estudiantes = data.estudiantes.map((est: any) => ({
       ...est,
-      conclusion: est.notas[0]?.conclusionDescriptiva || '',
+      conclusion: est.conclusionDescriptiva || '',
     }));
     grillaData.value = data;
     hasChanges.value = false;
