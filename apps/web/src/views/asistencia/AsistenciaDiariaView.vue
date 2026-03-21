@@ -110,19 +110,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { 
-  SaveIcon, 
-  SearchIcon, 
-  CheckCircleIcon, 
-  AlertCircleIcon,
-  UsersIcon,
-} from 'lucide-vue-next';
+import { SaveIcon, CheckCircleIcon, AlertCircleIcon, UsersIcon } from 'lucide-vue-next';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseInput from '../../components/ui/BaseInput.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
+
+const toast = useToast();
 
 const selectedSeccion = ref('');
 const selectedFecha = ref(new Date().toISOString().split('T')[0]);
@@ -166,8 +163,8 @@ async function loadAsistencia() {
   try {
     const data = await asistenciaService.getSeccionAsistencia(selectedSeccion.value, selectedFecha.value);
     asistenciaData.value = data;
-  } catch (err) {
-    console.error(err);
+  } catch {
+    toast.error('Error al cargar la asistencia');
   } finally {
     isLoading.value = false;
   }
@@ -199,9 +196,9 @@ async function handleSave() {
     
     await asistenciaService.registerBulk(selectedSeccion.value, selectedFecha.value, items);
     hasChanges.value = false;
-    alert('Asistencia guardada correctamente');
-  } catch (err) {
-    alert('Error al guardar asistencia');
+    toast.success('Asistencia guardada correctamente');
+  } catch {
+    toast.error('Error al guardar asistencia');
   } finally {
     isSaving.value = false;
   }

@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-4 bg-white p-6 rounded-xl border border-gray-200">
-    <h3 class="text-lg font-semibold text-gray-900">Datos del Apoderado</h3>
+    <div class="flex items-start justify-between gap-4">
+      <h3 class="text-lg font-semibold text-gray-900">Datos del Apoderado</h3>
+      <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full shrink-0">Opcional</span>
+    </div>
     
     <div class="space-y-4">
       <div class="flex gap-2 items-end">
@@ -23,7 +26,13 @@
         <span>Vinculando a: <strong>{{ apoderadoEncontrado.nombres }} {{ apoderadoEncontrado.apellido_paterno }}</strong></span>
         <button @click="resetApoderado" class="text-blue-500 hover:text-blue-700 underline text-xs">Cambiar</button>
       </div>
-      
+
+      <!-- Banner: datos autocompletados desde RENIEC -->
+      <div v-else-if="dniAutocompletado" class="bg-green-50 p-3 rounded-lg border border-green-200 flex gap-2 text-sm text-green-800">
+        <CheckCircleIcon class="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+        <span>Datos obtenidos automáticamente. Complete teléfono y correo si dispone de ellos.</span>
+      </div>
+
       <div v-if="!apoderadoEncontrado" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <BaseInput v-model="form.nombres" label="Nombres" required />
         <BaseInput v-model="form.apellidoPaterno" label="Apellido Paterno" required />
@@ -56,11 +65,15 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { SearchIcon } from 'lucide-vue-next';
+import { SearchIcon, CheckCircleIcon } from 'lucide-vue-next';
 import apiClient from '../../api/client';
+import { estudiantesService } from '../../api/services/estudiantes.service';
+import { useToast } from '../../composables/useToast';
 import BaseInput from './BaseInput.vue';
 import BaseSelect from './BaseSelect.vue';
 import BaseButton from './BaseButton.vue';
+
+const toast = useToast();
 
 const props = defineProps<{
   modelValue: any;
@@ -71,6 +84,7 @@ const emit = defineEmits(['update:modelValue']);
 const searchDni = ref('');
 const isSearching = ref(false);
 const apoderadoEncontrado = ref<any>(null);
+const dniAutocompletado = ref(false);
 
 const form = ref({
   dni: '',
@@ -111,22 +125,39 @@ const parentescos = [
 ];
 
 async function buscarApoderado() {
-  if (!searchDni.value || searchDni.value.length < 8) return;
+  if (!searchDni.value || searchDni.value.length !== 8) {
+    toast.warning('Ingrese un DNI válido de 8 dígitos.');
+    return;
+  }
   isSearching.value = true;
+  dniAutocompletado.value = false;
   try {
+    // 1. Buscar en BD local
     const { data } = await apiClient.get(`/apoderados?q=${searchDni.value}`);
     if (data && data.data) {
       apoderadoEncontrado.value = data.data;
       form.value.dni = data.data.dni;
       form.value.numeroDocumento = data.data.numero_documento;
-      alert('Apoderado encontrado y vinculado.');
-    } else {
-      alert('Apoderado no encontrado, por favor llene sus datos.');
-      form.value.dni = searchDni.value;
-      form.value.numeroDocumento = searchDni.value;
+      toast.success('Apoderado encontrado y vinculado.');
+      return;
+    }
+
+    // 2. No está en BD → consultar Factiliza para autocompletar
+    form.value.dni = searchDni.value;
+    form.value.numeroDocumento = searchDni.value;
+    try {
+      const reniec = await estudiantesService.validateDni(searchDni.value);
+      form.value.nombres = reniec.nombres;
+      form.value.apellidoPaterno = reniec.apellidoPaterno;
+      form.value.apellidoMaterno = reniec.apellidoMaterno ?? '';
+      dniAutocompletado.value = true;
+    } catch {
+      // Factiliza falló → formulario en blanco, el usuario llena manualmente
+      toast.warning('No se encontró el apoderado. Complete los datos manualmente.');
     }
   } catch (error) {
     console.error(error);
+    toast.error('Error al buscar el apoderado.');
   } finally {
     isSearching.value = false;
   }
@@ -134,6 +165,7 @@ async function buscarApoderado() {
 
 function resetApoderado() {
   apoderadoEncontrado.value = null;
+  dniAutocompletado.value = false;
   searchDni.value = '';
   form.value = {
     dni: '',

@@ -97,7 +97,7 @@ const getEstadoClass = (estado: string) => {
 
       <!-- Historial de Asistencia Reciente -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-6 py-4 border-bottom border-gray-100 bg-gray-50">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
           <h3 class="font-semibold text-gray-800">Asistencia Reciente</h3>
         </div>
         <div class="p-0">
@@ -115,7 +115,7 @@ const getEstadoClass = (estado: string) => {
                   {{ new Date(reg.fecha).toLocaleDateString() }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <BaseBadge :type="getEstadoClass(reg.estado)">
+                  <BaseBadge :variant="getEstadoClass(reg.estado)">
                     {{ reg.estado.replace('_', ' ') }}
                   </BaseBadge>
                 </td>

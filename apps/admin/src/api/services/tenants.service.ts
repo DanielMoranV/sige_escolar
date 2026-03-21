@@ -60,4 +60,9 @@ export const tenantsService = {
     const { data } = await apiClient.get(`/tenants/${id}/stats`);
     return data.data ?? data;
   },
+
+  async getTenantUsers(id: string) {
+    const { data } = await apiClient.get(`/tenants/${id}/users`);
+    return (data.data ?? data) as any[];
+  },
 };

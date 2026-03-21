@@ -13,7 +13,7 @@
         <BaseButton variant="secondary" @click="router.push(`/estudiantes/${estudianteId}/editar`)">
           <EditIcon class="w-4 h-4" /> Editar
         </BaseButton>
-        <BaseButton variant="danger" @click="confirmDelete">
+        <BaseButton variant="danger" @click="showDeleteModal = true">
           <TrashIcon class="w-4 h-4" /> Eliminar
         </BaseButton>
       </div>
@@ -113,6 +113,25 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal confirmación eliminar -->
+  <BaseModal :show="showDeleteModal" title="Eliminar Estudiante" @close="showDeleteModal = false">
+    <div class="space-y-3">
+      <p class="text-sm text-gray-600">
+        ¿Está seguro de que desea eliminar a
+        <span class="font-semibold">{{ estudiante?.nombres }} {{ estudiante?.apellido_paterno }}</span>?
+      </p>
+      <p class="text-xs text-red-500 bg-red-50 p-2 rounded">
+        Esta acción ocultará al estudiante de todas las listas.
+      </p>
+    </div>
+    <template #footer>
+      <div class="flex justify-end gap-3">
+        <BaseButton variant="secondary" @click="showDeleteModal = false">Cancelar</BaseButton>
+        <BaseButton variant="danger" :loading="isDeleting" @click="handleDelete">Eliminar</BaseButton>
+      </div>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -122,10 +141,14 @@ import { useQuery } from '@tanstack/vue-query';
 import { ArrowLeftIcon, EditIcon, TrashIcon, PlusIcon } from 'lucide-vue-next';
 import apiClient from '../../api/client';
 import { estudiantesService } from '../../api/services/estudiantes.service';
+import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
+import BaseModal from '../../components/ui/BaseModal.vue';
 import ComponenteApoderado from '../../components/ui/ComponenteApoderado.vue';
 import ComponenteExoneracion from '../../components/ui/ComponenteExoneracion.vue';
+
+const toast = useToast();
 
 const route = useRoute();
 const router = useRouter();
@@ -136,6 +159,8 @@ const isSavingApoderado = ref(false);
 const nuevoApoderado = ref<any>({});
 const apoderados = ref<any[]>([]);
 const matriculas = ref<any[]>([]);
+const showDeleteModal = ref(false);
+const isDeleting = ref(false);
 
 const { data: estudiante, isLoading, refetch } = useQuery({
   queryKey: ['estudiante-detalle', estudianteId],
@@ -148,40 +173,42 @@ const { data: estudiante, isLoading, refetch } = useQuery({
 
 async function loadRelations() {
   try {
-    // Estas llamadas asumimos que se harán en endpoints que crearemos o los filtramos
-    // Para simplificar, si no existen en la API, retornarán array vacío temporalmente.
     const [resMat, resApo] = await Promise.all([
-      apiClient.get(`/matriculas?estudianteId=${estudianteId}&limit=10`), // Podría requerir ajuste si el backend no filtra por estudianteId
-      apiClient.get(`/estudiantes/${estudianteId}/apoderados`).catch(() => ({ data: { data: [] } }))
+      apiClient.get(`/matriculas?estudianteId=${estudianteId}&limit=10`),
+      apiClient.get(`/estudiantes/${estudianteId}/apoderados`).catch(() => ({ data: { data: [] } })),
     ]);
     matriculas.value = resMat.data.data || [];
     apoderados.value = resApo.data.data || [];
-  } catch (error) {
-    console.error(error);
+  } catch {
+    toast.error('Error al cargar datos del estudiante');
   }
 }
 
 async function saveApoderado() {
   isSavingApoderado.value = true;
   try {
-    await apiClient.post('/apoderados', {
-      ...nuevoApoderado.value,
-      estudianteId
-    });
+    await apiClient.post('/apoderados', { ...nuevoApoderado.value, estudianteId });
     showApoderadoForm.value = false;
     nuevoApoderado.value = {};
+    toast.success('Apoderado guardado correctamente');
     loadRelations();
-  } catch (error: any) {
-    alert(error?.response?.data?.message || 'Error al guardar apoderado');
+  } catch (err: any) {
+    toast.error(err?.response?.data?.message || 'Error al guardar apoderado');
   } finally {
     isSavingApoderado.value = false;
   }
 }
 
-async function confirmDelete() {
-  if (confirm('¿Está seguro de eliminar este estudiante?')) {
+async function handleDelete() {
+  isDeleting.value = true;
+  try {
     await estudiantesService.deleteEstudiante(estudianteId);
     router.push('/estudiantes');
+  } catch {
+    toast.error('Error al eliminar el estudiante');
+    showDeleteModal.value = false;
+  } finally {
+    isDeleting.value = false;
   }
 }
 </script>

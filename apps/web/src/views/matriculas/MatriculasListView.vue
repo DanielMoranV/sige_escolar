@@ -87,15 +87,11 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { 
-  UserPlusIcon, 
-  UserMinusIcon,
-  EyeIcon,
-  SearchIcon
-} from 'lucide-vue-next';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
+import { UserPlusIcon, UserMinusIcon, EyeIcon } from 'lucide-vue-next';
 import { matriculasService } from '../../api/services/matriculas.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
 import BasePagination from '../../components/ui/BasePagination.vue';
@@ -104,6 +100,8 @@ import BaseBadge from '../../components/ui/BaseBadge.vue';
 import BaseModal from '../../components/ui/BaseModal.vue';
 import BaseInput from '../../components/ui/BaseInput.vue';
 
+const toast = useToast();
+
 const router = useRouter();
 const queryClient = useQueryClient();
 
@@ -111,6 +109,9 @@ const page = ref(1);
 const limit = ref(20);
 const filterSeccion = ref('');
 const filterEstado = ref('');
+
+// Resetear página al cambiar filtros
+watch([filterSeccion, filterEstado], () => { page.value = 1; });
 const anioEscolar = ref<any>(null);
 
 const headers = [
@@ -183,16 +184,24 @@ const retiroForm = ref({ fechaRetiro: new Date().toISOString().split('T')[0], mo
 
 function confirmRetiro(item: any) {
   selectedMatricula.value = item;
+  retiroForm.value = { fechaRetiro: new Date().toISOString().split('T')[0], motivo: '' };
   showRetiroModal.value = true;
 }
 
 async function handleRetiro() {
-  if (!selectedMatricula.value || !retiroForm.value.motivo) return;
+  if (!selectedMatricula.value) return;
+  if (!retiroForm.value.motivo.trim()) {
+    toast.warning('Ingrese el motivo del retiro');
+    return;
+  }
   isRetiring.value = true;
   try {
     await matriculasService.retirar(selectedMatricula.value.id, retiroForm.value);
     queryClient.invalidateQueries({ queryKey: ['matriculas'] });
     showRetiroModal.value = false;
+    toast.success('Retiro registrado correctamente');
+  } catch {
+    toast.error('Error al registrar el retiro');
   } finally {
     isRetiring.value = false;
   }

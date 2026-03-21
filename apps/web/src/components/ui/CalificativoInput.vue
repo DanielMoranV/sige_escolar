@@ -5,12 +5,15 @@
       <button
         v-for="opt in literalOptions"
         :key="opt"
-        @click="updateLiteral(opt)"
+        @click="!disabled && updateLiteral(opt)"
+        :disabled="disabled"
         class="w-8 h-8 rounded-md text-xs font-bold transition-all border flex items-center justify-center"
         :class="[
-          literalValue === opt 
-            ? getLiteralClass(opt) 
-            : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-600'
+          disabled
+            ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed'
+            : literalValue === opt
+              ? getLiteralClass(opt)
+              : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-600'
         ]"
       >
         {{ opt }}
@@ -24,10 +27,17 @@
         v-model="numericValue"
         min="0"
         max="20"
+        :disabled="disabled"
         @blur="emitNumeric"
         @keyup.enter="emitNumeric"
         class="w-full text-center py-1 border rounded-md text-sm font-semibold focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none transition-all"
-        :class="numericValue !== null && numericValue < 11 ? 'text-red-600 border-red-200 bg-red-50' : 'text-gray-900 border-gray-200'"
+        :class="[
+          disabled
+            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+            : numericValue !== null && numericValue < 11
+              ? 'text-red-600 border-red-200 bg-red-50'
+              : 'text-gray-900 border-gray-200'
+        ]"
       />
     </div>
   </div>
@@ -40,6 +50,7 @@ const props = defineProps<{
   nivel: 'PRIMARIA' | 'SECUNDARIA';
   literal?: string | null;
   numerico?: number | null;
+  disabled?: boolean;
 }>();
 
 const emit = defineEmits(['update:literal', 'update:numerico', 'change']);

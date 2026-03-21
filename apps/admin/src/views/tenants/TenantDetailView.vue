@@ -151,6 +151,41 @@
       </div>
     </template>
 
+    <!-- Usuarios del colegio -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+        <p class="text-sm font-semibold text-gray-700">Usuarios</p>
+        <span v-if="users" class="text-xs text-gray-400">{{ users.length }} registrados</span>
+      </div>
+
+      <div v-if="usersLoading" class="p-4 space-y-3">
+        <div v-for="i in 3" :key="i" class="h-10 bg-gray-100 animate-pulse rounded" />
+      </div>
+
+      <div v-else-if="users && users.length" class="divide-y divide-gray-100">
+        <div v-for="user in users" :key="user.id" class="flex items-center justify-between px-4 py-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
+              {{ user.nombres[0] }}{{ user.apellidos[0] }}
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">{{ user.nombres }} {{ user.apellidos }}</p>
+              <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0 ml-3">
+            <BaseBadge :variant="rolVariant(user.rol)" class="text-xs">{{ rolLabel(user.rol) }}</BaseBadge>
+            <BaseBadge v-if="!user.activo" variant="danger" class="text-xs">Inactivo</BaseBadge>
+            <BaseBadge v-if="user.needs_password_change" variant="warning" class="text-xs">Cambio pendiente</BaseBadge>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="px-4 py-6 text-sm text-gray-400 text-center">
+        Sin usuarios registrados.
+      </div>
+    </div>
+
     <!-- Status modal -->
     <BaseModal
       :show="showStatusModal"
@@ -203,6 +238,11 @@ const { data: stats, isPending: statsLoading } = useQuery({
   queryFn: () => tenantsService.getTenantStats(tenantId),
 });
 
+const { data: users, isPending: usersLoading } = useQuery({
+  queryKey: ['tenant-users', tenantId],
+  queryFn: () => tenantsService.getTenantUsers(tenantId),
+});
+
 const statusMutation = useMutation({
   mutationFn: ({ id, activo }: { id: string; activo: boolean }) =>
     tenantsService.updateTenantStatus(id, activo),
@@ -245,6 +285,30 @@ function formatNivel(nivel: string): string {
     SECUNDARIA: 'Secundaria',
   };
   return map[nivel] ?? nivel;
+}
+
+function rolLabel(rol: string): string {
+  const map: Record<string, string> = {
+    DIRECTOR: 'Director',
+    SUBDIRECTOR: 'Subdirector',
+    SECRETARIA: 'Secretaria',
+    DOCENTE_TUTOR: 'Docente Tutor',
+    DOCENTE_AREA: 'Docente Área',
+    APODERADO: 'Apoderado',
+    ESTUDIANTE: 'Estudiante',
+  };
+  return map[rol] ?? rol;
+}
+
+function rolVariant(rol: string): 'success' | 'info' | 'warning' | 'neutral' {
+  switch (rol) {
+    case 'DIRECTOR':
+    case 'SUBDIRECTOR': return 'success';
+    case 'SECRETARIA': return 'info';
+    case 'DOCENTE_TUTOR':
+    case 'DOCENTE_AREA': return 'warning';
+    default: return 'neutral';
+  }
 }
 
 function formatRegimen(regimen: string): string {

@@ -118,9 +118,9 @@ export class NotasService {
     return { message: 'Periodo cerrado correctamente' };
   }
 
-  async exportarSiagie(slug: string, periodoId: string, seccionId: string): Promise<Buffer> {
+  async exportarSiagie(slug: string, periodoId: string, seccionId: string, usuarioId?: string): Promise<Buffer> {
     const data = await this.prisma.$queryRawUnsafe<any[]>(`
-      SELECT 
+      SELECT
         e.codigo_siagie, e.dni, e.apellido_paterno, e.apellido_materno, e.nombres,
         c.nombre_display as competencia_nombre, a.nombre_display as area_nombre,
         n.calificativo_literal, n.calificativo_numerico, n.conclusion_descriptiva
@@ -134,12 +134,14 @@ export class NotasService {
       ORDER BY e.apellido_paterno, e.apellido_materno, c.orden
     `);
 
-    const periodo = await this.prisma.$queryRawUnsafe<any[]>(`SELECT nombre FROM "${slug}".periodos WHERE id = '${periodoId}'`);
+    const periodo = await this.prisma.$queryRawUnsafe<any[]>(`SELECT nombre, anio_escolar_id FROM "${slug}".periodos WHERE id = '${periodoId}'`);
+    const anioEscolarId = periodo[0]?.anio_escolar_id;
+    const generadoPor = usuarioId ? `'${usuarioId}'` : 'NULL';
 
     // Log sync
     await this.prisma.$executeRawUnsafe(`
-      INSERT INTO "${slug}".siagie_sync_log (modulo, periodo_id, estado, generado_en)
-      VALUES ('CALIFICACIONES', '${periodoId}', 'GENERADO'::"${slug}".estado_sync, NOW())
+      INSERT INTO "${slug}".siagie_sync_log (modulo, periodo_id, anio_escolar_id, estado, generado_por, generado_en)
+      VALUES ('CALIFICACIONES', '${periodoId}', ${anioEscolarId ? `'${anioEscolarId}'` : 'NULL'}, 'GENERADO'::"${slug}".estado_sync, ${generadoPor}, NOW())
     `);
 
     return this.excelService.generateNotasExcel(data, periodo[0]?.nombre || 'Periodo');

@@ -377,6 +377,25 @@ export class TenantsAdminService {
     return this.findOne(id);
   }
 
+  async getUsers(id: string) {
+    await this.findOne(id);
+    return this.prisma.usuario.findMany({
+      where: { tenant_id: id, deleted_at: null },
+      select: {
+        id: true,
+        nombres: true,
+        apellidos: true,
+        email: true,
+        rol: true,
+        activo: true,
+        ultimo_acceso: true,
+        created_at: true,
+        needs_password_change: true,
+      },
+      orderBy: { created_at: 'asc' },
+    });
+  }
+
   async updateStatus(id: string, activo: boolean) {
     await this.findOne(id);
     return this.prisma.tenant.update({

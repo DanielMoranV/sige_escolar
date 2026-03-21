@@ -19,12 +19,30 @@
       </div>
 
       <div class="p-6">
-        <!-- Paso 1: Identificación y RENIEC -->
+        <!-- Paso 1: Identificación -->
         <div v-if="currentStep === 1" class="space-y-6">
-          <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3">
+          <!-- Banner: datos verificados -->
+          <div v-if="dniVerificado" class="bg-green-50 p-4 rounded-xl border border-green-200 flex gap-3">
+            <CheckCircleIcon class="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+            <div class="text-sm text-green-800">
+              <p class="font-medium">Datos obtenidos automáticamente.</p>
+              <p class="mt-0.5 text-green-700">Complete los campos que no pudieron recuperarse (fecha de nacimiento, género).</p>
+            </div>
+          </div>
+
+          <!-- Banner: lookup falló, modo manual -->
+          <div v-else-if="lookupFailed" class="bg-amber-50 p-4 rounded-xl border border-amber-200 flex gap-3">
+            <AlertTriangleIcon class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <p class="text-sm text-amber-800">
+              No se pudo obtener los datos automáticamente. Complete los campos manualmente.
+            </p>
+          </div>
+
+          <!-- Banner: instrucción inicial -->
+          <div v-else class="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3">
             <InfoIcon class="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <p class="text-sm text-blue-800">
-              Ingrese el DNI para validar la identidad con RENIEC. Esto autocompletará los datos básicos del estudiante.
+              Ingrese el DNI para autocompletar los datos del estudiante. Si el servicio no está disponible, puede ingresarlos manualmente.
             </p>
           </div>
 
@@ -41,11 +59,23 @@
             </div>
             <BaseButton :loading="isValidating" @click="validateDni" class="mb-1">
               <SearchIcon class="w-4 h-4" />
-              Validar
+              Validar DNI
             </BaseButton>
           </div>
 
-          <div v-if="showManualForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+          <!-- Enlace para ingresar manualmente sin validar -->
+          <div v-if="!showManualForm" class="text-center">
+            <button
+              type="button"
+              @click="habilitarManual"
+              class="text-sm text-gray-500 hover:text-blue-600 underline underline-offset-2 transition-colors"
+            >
+              Ingresar datos manualmente
+            </button>
+          </div>
+
+          <!-- Formulario de datos personales (auto o manual) -->
+          <div v-if="showManualForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <BaseInput v-model="form.nombres" label="Nombres" required :error="errors.nombres" />
             <BaseInput v-model="form.apellidoPaterno" label="Apellido Paterno" required :error="errors.apellidoPaterno" />
             <BaseInput v-model="form.apellidoMaterno" label="Apellido Materno" :error="errors.apellidoMaterno" />
@@ -108,25 +138,26 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useMutation } from '@tanstack/vue-query';
-import { 
-  ArrowLeftIcon, 
-  ArrowRightIcon, 
-  SearchIcon, 
-  InfoIcon 
-} from 'lucide-vue-next';
+import { useQueryClient } from '@tanstack/vue-query';
+import { ArrowLeftIcon, ArrowRightIcon, SearchIcon, InfoIcon, CheckCircleIcon, AlertTriangleIcon } from 'lucide-vue-next';
 import { estudiantesService } from '../../api/services/estudiantes.service';
+import { useToast } from '../../composables/useToast';
 import BaseInput from '../../components/ui/BaseInput.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import ComponenteApoderado from '../../components/ui/ComponenteApoderado.vue';
 import apiClient from '../../api/client';
 
+const toast = useToast();
+
 const router = useRouter();
+const queryClient = useQueryClient();
 const currentStep = ref(1);
 const isValidating = ref(false);
 const isSubmitting = ref(false);
 const showManualForm = ref(false);
+const dniVerificado = ref(false);
+const lookupFailed = ref(false);
 
 const apoderado = ref<any>({});
 
@@ -149,26 +180,39 @@ const form = ref({
 
 const errors = ref<Record<string, string>>({});
 
+function habilitarManual() {
+  showManualForm.value = true;
+  lookupFailed.value = false;
+  dniVerificado.value = false;
+  form.value.numeroDocumento = form.value.dni;
+}
+
 async function validateDni() {
   if (!form.value.dni || form.value.dni.length !== 8) {
     errors.value.dni = 'Ingrese un DNI válido de 8 dígitos';
     return;
   }
-  
+
   errors.value.dni = '';
   isValidating.value = true;
+  lookupFailed.value = false;
+  dniVerificado.value = false;
+
   try {
     const data = await estudiantesService.validateDni(form.value.dni);
     form.value.nombres = data.nombres;
     form.value.apellidoPaterno = data.apellidoPaterno;
     form.value.apellidoMaterno = data.apellidoMaterno;
-    form.value.fechaNacimiento = data.fechaNacimiento;
-    form.value.genero = data.genero;
+    if (data.fechaNacimiento) form.value.fechaNacimiento = data.fechaNacimiento;
+    if (data.genero) form.value.genero = data.genero;
+    if (data.ubigeo) form.value.ubigeoNacimiento = data.ubigeo;
     form.value.numeroDocumento = form.value.dni;
     showManualForm.value = true;
-  } catch (err) {
-    errors.value.dni = 'No se pudo validar el DNI. Ingrese los datos manualmente.';
+    dniVerificado.value = true;
+  } catch {
+    lookupFailed.value = true;
     showManualForm.value = true;
+    form.value.numeroDocumento = form.value.dni;
   } finally {
     isValidating.value = false;
   }
@@ -176,8 +220,16 @@ async function validateDni() {
 
 function nextStep() {
   if (currentStep.value === 1) {
+    if (!showManualForm.value) {
+      toast.warning('Valide el DNI o use "Ingresar datos manualmente" para continuar');
+      return;
+    }
     if (!form.value.nombres || !form.value.apellidoPaterno || !form.value.fechaNacimiento) {
-      alert('Por favor complete los campos obligatorios');
+      toast.warning('Complete los campos obligatorios: nombres, apellido paterno y fecha de nacimiento');
+      return;
+    }
+    if (!form.value.genero) {
+      toast.warning('Seleccione el género del estudiante');
       return;
     }
   }
@@ -187,10 +239,14 @@ function nextStep() {
 async function submit() {
   isSubmitting.value = true;
   try {
-    const estudiante = await estudiantesService.createEstudiante({
-      ...form.value,
-      numeroDocumento: form.value.dni || form.value.numeroDocumento
-    });
+    const raw = { ...form.value, numeroDocumento: form.value.dni || form.value.numeroDocumento };
+    // Los campos opcionales con restricciones de formato (ej. @Length(6,6)) fallan si
+    // se envían como string vacío — class-validator solo salta @IsOptional() con undefined/null.
+    const optionals = ['codigoSiagie', 'ubigeoNacimiento', 'etnia', 'tipoDiscapacidad', 'apellidoMaterno'] as const;
+    for (const key of optionals) {
+      if (!raw[key]) delete raw[key];
+    }
+    const estudiante = await estudiantesService.createEstudiante(raw);
 
     if (apoderado.value && apoderado.value.numeroDocumento) {
       await apiClient.post('/apoderados', {
@@ -199,9 +255,13 @@ async function submit() {
       });
     }
 
+    toast.success('Estudiante registrado correctamente');
+    queryClient.invalidateQueries({ queryKey: ['estudiantes'] });
     router.push('/estudiantes');
   } catch (err: any) {
-    alert(err?.response?.data?.message || 'Error al registrar estudiante');
+    const errData = err?.response?.data;
+    const detail = Array.isArray(errData?.errors) ? errData.errors.join(' | ') : errData?.message;
+    toast.error(detail || 'Error al registrar estudiante');
   } finally {
     isSubmitting.value = false;
   }

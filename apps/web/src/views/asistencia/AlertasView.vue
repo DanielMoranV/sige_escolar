@@ -76,16 +76,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { 
-  RefreshCwIcon, 
-  CheckCircleIcon,
-  AlertTriangleIcon
-} from 'lucide-vue-next';
+import { RefreshCwIcon, CheckCircleIcon } from 'lucide-vue-next';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
+
+const toast = useToast();
 
 const router = useRouter();
 const alertas = ref<any[]>([]);
@@ -118,9 +117,9 @@ async function handleRecalculate() {
     const anio = await schoolConfigService.getAnioEscolar();
     await asistenciaService.calcularAlertas(anio.id);
     await loadAlertas();
-    alert('Alertas recalculadas correctamente');
-  } catch (error) {
-    alert('Error al recalcular alertas');
+    toast.success('Alertas recalculadas correctamente');
+  } catch {
+    toast.error('Error al recalcular alertas');
   } finally {
     isRecalculating.value = false;
   }
@@ -148,6 +147,6 @@ function getPorcentajeTextClass(p: number) {
 }
 
 function verDetalle(row: any) {
-  router.push(`/estudiantes/${row.matricula_id}`); // In v1 we point to student detail
+  router.push(`/matriculas/${row.matricula_id}`);
 }
 </script>

@@ -14,7 +14,7 @@
       <!-- Stepper -->
       <div class="flex border-b border-gray-100">
         <div v-for="step in 2" :key="step" class="flex-1 py-3 text-center text-sm font-medium" :class="currentStep === step ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400'">
-          Paso {{ step === 1 ? 'Buscar Estudiante' : 'Datos de Matrícula' }}
+          Paso {{ step }}: {{ step === 1 ? 'Buscar Estudiante' : 'Datos de Matrícula' }}
         </div>
       </div>
 
@@ -113,18 +113,17 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { 
-  ArrowLeftIcon, 
-  ArrowRightIcon, 
-  SearchIcon 
-} from 'lucide-vue-next';
+import { ArrowLeftIcon, ArrowRightIcon, SearchIcon } from 'lucide-vue-next';
 import { estudiantesService } from '../../api/services/estudiantes.service';
 import { matriculasService } from '../../api/services/matriculas.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useToast } from '../../composables/useToast';
 import BaseInput from '../../components/ui/BaseInput.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
+
+const toast = useToast();
 
 const router = useRouter();
 const currentStep = ref(1);
@@ -192,8 +191,8 @@ async function buscarEstudiante() {
       form.value.estudianteId = estudianteEncontrado.value.id;
     }
     searchAttempted.value = true;
-  } catch (err) {
-    console.error(err);
+  } catch {
+    toast.error('Error al buscar el estudiante');
   } finally {
     isSearching.value = false;
   }
@@ -201,16 +200,17 @@ async function buscarEstudiante() {
 
 async function submit() {
   if (!form.value.seccionId) {
-    alert('Seleccione una sección');
+    toast.warning('Seleccione una sección');
     return;
   }
 
   isSubmitting.value = true;
   try {
     await matriculasService.createMatricula(form.value);
+    toast.success('Matrícula registrada correctamente');
     router.push('/matriculas');
   } catch (err: any) {
-    alert(err?.response?.data?.message || 'Error al registrar matrícula');
+    toast.error(err?.response?.data?.message || 'Error al registrar matrícula');
   } finally {
     isSubmitting.value = false;
   }

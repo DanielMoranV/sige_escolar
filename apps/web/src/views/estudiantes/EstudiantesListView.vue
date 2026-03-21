@@ -12,8 +12,8 @@
     </div>
 
     <!-- Filtros y Búsqueda -->
-    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4">
-      <div class="flex-1 relative">
+    <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div class="relative">
         <SearchIcon class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           v-model="search"
@@ -22,10 +22,6 @@
           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           @input="handleSearch"
         />
-      </div>
-      <div class="flex gap-2">
-        <BaseSelect v-model="filterNivel" :options="niveles" placeholder="Nivel" class="w-32" />
-        <BaseSelect v-model="filterGrado" :options="grados" placeholder="Grado" class="w-32" />
       </div>
     </div>
 
@@ -107,21 +103,17 @@
 import { ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
-import { 
-  PlusIcon, 
-  SearchIcon, 
-  EyeIcon, 
-  EditIcon, 
-  TrashIcon,
-} from 'lucide-vue-next';
+import { PlusIcon, SearchIcon, EyeIcon, EditIcon, TrashIcon } from 'lucide-vue-next';
 import { estudiantesService } from '../../api/services/estudiantes.service';
+import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
 import BasePagination from '../../components/ui/BasePagination.vue';
-import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
 import BaseModal from '../../components/ui/BaseModal.vue';
 import { debounce } from 'lodash';
+
+const toast = useToast();
 
 const router = useRouter();
 const queryClient = useQueryClient();
@@ -129,8 +121,6 @@ const queryClient = useQueryClient();
 const page = ref(1);
 const limit = ref(20);
 const search = ref('');
-const filterNivel = ref('');
-const filterGrado = ref('');
 
 const headers = [
   { key: 'nombre', label: 'Estudiante' },
@@ -138,23 +128,6 @@ const headers = [
   { key: 'genero', label: 'Género', class: 'hidden sm:table-cell' },
   { key: 'fecha_nacimiento', label: 'F. Nacimiento', class: 'hidden lg:table-cell' },
   { key: 'acciones', label: 'Acciones', class: 'text-right' },
-];
-
-const niveles = [
-  { label: 'Todos', value: '' },
-  { label: 'Inicial', value: 'INICIAL' },
-  { label: 'Primaria', value: 'PRIMARIA' },
-  { label: 'Secundaria', value: 'SECUNDARIA' },
-];
-
-const grados = [
-  { label: 'Todos', value: '' },
-  { label: '1°', value: '1' },
-  { label: '2°', value: '2' },
-  { label: '3°', value: '3' },
-  { label: '4°', value: '4' },
-  { label: '5°', value: '5' },
-  { label: '6°', value: '6' },
 ];
 
 const { data: queryResult, isLoading } = useQuery({
@@ -194,6 +167,10 @@ const deleteMutation = useMutation({
     queryClient.invalidateQueries({ queryKey: ['estudiantes'] });
     showDeleteModal.value = false;
     selectedItem.value = null;
+    toast.success('Estudiante eliminado correctamente');
+  },
+  onError: () => {
+    toast.error('Error al eliminar el estudiante');
   },
 });
 

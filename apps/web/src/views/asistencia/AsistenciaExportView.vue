@@ -26,43 +26,14 @@
         </div>
       </div>
 
-      <div v-if="exportData" class="space-y-4 animate-in fade-in duration-500">
-        <div class="flex items-center justify-between border-b pb-4">
-          <h3 class="font-bold text-gray-800">Vista Previa: Consolidado de {{ getMesNombre(selectedMes) }}</h3>
-          <span class="text-xs text-gray-500">Días lectivos: {{ exportData.totalDiasLectivos }}</span>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">DNI</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estudiante</th>
-                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Asist.</th>
-                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">F. Just.</th>
-                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">F. Injust.</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="item in exportData.data" :key="item.dni" class="hover:bg-gray-50 transition-colors">
-                <td class="px-4 py-3 text-sm text-gray-600">{{ item.dni }}</td>
-                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ item.apellido_paterno }} {{ item.apellido_materno }}, {{ item.nombres }}</td>
-                <td class="px-4 py-3 text-sm text-center font-bold text-green-600">{{ item.asistencias }}</td>
-                <td class="px-4 py-3 text-sm text-center text-blue-600">{{ item.faltas_justificadas }}</td>
-                <td class="px-4 py-3 text-sm text-center font-bold text-red-600">{{ item.faltas_injustificadas }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-3">
-          <InfoIcon class="w-5 h-5 text-blue-600 shrink-0" />
-          <div>
-            <p class="text-sm text-blue-800 font-medium">Instrucciones para el SIAGIE</p>
-            <p class="text-xs text-blue-700 mt-1">
-              Descargue el archivo Excel oficial del SIAGIE para este mes y sección, y copie los valores de las columnas Asist., F. Just. y F. Injust. exactamente como aparecen aquí.
-            </p>
-          </div>
+      <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-3">
+        <InfoIcon class="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <div>
+          <p class="text-sm text-blue-800 font-medium">Instrucciones para el SIAGIE</p>
+          <p class="text-xs text-blue-700 mt-1">
+            Descargue el archivo Excel y cargue los datos de asistencia en el sistema SIAGIE del MINEDU.
+            El archivo incluye los totales de asistencia, faltas justificadas e injustificadas por estudiante.
+          </p>
         </div>
       </div>
     </div>
@@ -71,20 +42,19 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { 
-  DownloadIcon,
-  InfoIcon
-} from 'lucide-vue-next';
+import { DownloadIcon, InfoIcon } from 'lucide-vue-next';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
+
+const toast = useToast();
 
 const selectedMes = ref((new Date().getMonth() + 1).toString());
 const selectedSeccion = ref('');
 const seccionesOptions = ref<any[]>([]);
 const isExporting = ref(false);
-const exportData = ref<any>(null);
 
 const meses = [
   { label: 'Marzo', value: '3' },
@@ -105,8 +75,8 @@ onMounted(async () => {
     { label: 'Todas las secciones', value: '' },
     ...secc.map((s: any) => ({
       label: `${s.grado_nombre} - ${s.nombre}`,
-      value: s.id
-    }))
+      value: s.id,
+    })),
   ];
 });
 
@@ -117,9 +87,9 @@ async function handleExport() {
     const blob = await asistenciaService.exportSiagie({
       mes: parseInt(selectedMes.value, 10),
       anioEscolarId: anio.id,
-      seccionId: selectedSeccion.value || undefined
+      seccionId: selectedSeccion.value || undefined,
     });
-    
+
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -127,10 +97,11 @@ async function handleExport() {
     document.body.appendChild(link);
     link.click();
     link.remove();
-    
-    // Opcional: mostrar mensaje de éxito
-  } catch (error) {
-    alert('Error al generar el reporte');
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Reporte generado y descargado correctamente');
+  } catch {
+    toast.error('Error al generar el reporte');
   } finally {
     isExporting.value = false;
   }

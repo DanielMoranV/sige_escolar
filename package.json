@@ -13,8 +13,12 @@
     "build": "npm run build --workspaces --if-present",
     "db:migrate": "npx prisma migrate dev --schema=prisma/schema.prisma",
     "db:seed": "npx ts-node -r tsconfig-paths/register prisma/seed/index.ts",
+    "db:reset": "npx ts-node scripts/drop-all-schemas.ts && npx prisma migrate reset --schema=prisma/schema.prisma --force && npm run db:seed",
     "db:studio": "npx prisma studio --schema=prisma/schema.prisma",
     "tenant:create": "npx ts-node scripts/create-tenant.ts",
+    "demo:seed": "npx ts-node -r tsconfig-paths/register scripts/demo/seed-demo.ts",
+    "demo:drop": "npx ts-node -r tsconfig-paths/register scripts/demo/drop-demo.ts",
+    "demo:reset": "npx ts-node -r tsconfig-paths/register scripts/demo/reset-demo.ts",
     "lint": "eslint . --ext .ts,.vue",
     "format": "prettier --write \"**/*.{ts,vue,json}\""
   },

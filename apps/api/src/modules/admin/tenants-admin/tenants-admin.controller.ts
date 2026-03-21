@@ -64,4 +64,9 @@ export class TenantsAdminController {
   async getStats(@Param('id', ParseUUIDPipe) id: string) {
     return this.tenantsAdminService.getStats(id);
   }
+
+  @Get(':id/users')
+  async getUsers(@Param('id', ParseUUIDPipe) id: string) {
+    return this.tenantsAdminService.getUsers(id);
+  }
 }

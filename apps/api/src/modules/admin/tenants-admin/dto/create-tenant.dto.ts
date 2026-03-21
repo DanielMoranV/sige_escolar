@@ -14,6 +14,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateTenantDto {
   // Paso 1 - Datos básicos
@@ -78,6 +79,7 @@ export class CreateTenantDto {
   @IsNotEmpty()
   directorApellidos: string;
 
+  @Transform(({ value }) => value?.toLowerCase().trim())
   @IsEmail()
   @IsNotEmpty()
   directorEmail: string;

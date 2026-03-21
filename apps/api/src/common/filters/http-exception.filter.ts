@@ -33,6 +33,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       } else if (exception.code === 'P2025') {
         status = HttpStatus.NOT_FOUND;
         message = 'Registro no encontrado';
+      } else if (exception.code === 'P2003') {
+        status = HttpStatus.UNPROCESSABLE_ENTITY;
+        const field = (exception.meta?.field_name as string) ?? '';
+        if (field.includes('ubigeo')) {
+          message = 'El código de ubigeo ingresado no existe. Verifique el código o déjelo en blanco.';
+        } else {
+          message = `Referencia inválida: el valor de "${field}" no existe en el sistema.`;
+        }
       } else {
         status = HttpStatus.UNPROCESSABLE_ENTITY;
         message = 'Error en la base de datos';

@@ -1,12 +1,16 @@
 import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { DniLookupService } from '../dni/dni-lookup.service';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
 
 @Injectable()
 export class EstudiantesService {
   private readonly logger = new Logger(EstudiantesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dniLookup: DniLookupService,
+  ) {}
 
   async findAll(slug: string, page: number = 1, limit: number = 20, search?: string) {
     const skip = (page - 1) * limit;
@@ -140,19 +144,6 @@ export class EstudiantesService {
   }
 
   async validateDni(dni: string) {
-    // Simulación de respuesta RENIEC
-    this.logger.log(`Validando DNI ${dni} con RENIEC (Simulado)`);
-    
-    // En un escenario real aquí llamaríamos a un servicio externo
-    // Por ahora retornamos datos estáticos para pruebas
-    return {
-      dni,
-      nombres: 'JUAN ALBERTO',
-      apellidoPaterno: 'QUISPE',
-      apellidoMaterno: 'MAMANI',
-      fechaNacimiento: '2015-05-20',
-      genero: 'M',
-      ubigeo: '150101'
-    };
+    return this.dniLookup.lookup(dni);
   }
 }

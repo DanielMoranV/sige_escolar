@@ -70,12 +70,15 @@ import { ref, onMounted } from 'vue';
 import { DownloadIcon } from 'lucide-vue-next';
 import { siagieService } from '../../api/services/siagie.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useToast } from '../../composables/useToast';
 import BaseTable from '../../components/ui/BaseTable.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseModal from '../../components/ui/BaseModal.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseInput from '../../components/ui/BaseInput.vue';
+
+const toast = useToast();
 
 const anioId = ref('');
 const logs = ref<any[]>([]);
@@ -136,9 +139,9 @@ async function guardarConfirmacion() {
     await siagieService.confirmarSync(selectedLog.value.id, form.value);
     showModal.value = false;
     await loadLogs();
-    alert('Estado actualizado correctamente.');
+    toast.success('Estado actualizado correctamente.');
   } catch (err) {
-    alert('Error al actualizar el estado.');
+    toast.error('Error al actualizar el estado.');
   } finally {
     isSaving.value = false;
   }

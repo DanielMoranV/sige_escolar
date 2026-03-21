@@ -8,10 +8,12 @@
       </main>
     </div>
   </div>
+  <BaseToast />
 </template>
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
 import Sidebar from '../components/layout/Sidebar.vue';
 import Topbar from '../components/layout/Topbar.vue';
+import BaseToast from '../components/ui/BaseToast.vue';
 </script>

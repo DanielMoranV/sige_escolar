@@ -2,8 +2,11 @@ import apiClient from '../client';
 
 export const matriculasService = {
   async getMatriculas(anioEscolarId: string, page: number = 1, limit: number = 20, filters?: any) {
+    const cleanFilters = filters
+      ? Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '' && v !== null && v !== undefined))
+      : {};
     const { data } = await apiClient.get('matriculas', {
-      params: { anioEscolarId, page, limit, ...filters },
+      params: { anioEscolarId, page, limit, ...cleanFilters },
     });
     return data;
   },

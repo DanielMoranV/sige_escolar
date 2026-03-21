@@ -54,9 +54,10 @@ export class NotasController {
   async exportarSiagie(
     @Headers('x-tenant-slug') slug: string,
     @Query() query: ExportNotasQueryDto,
+    @CurrentUser() user: any,
     @Res() res: any,
   ) {
-    const excelBuffer = await this.notasService.exportarSiagie(slug, query.periodoId, query.seccionId);
+    const excelBuffer = await this.notasService.exportarSiagie(slug, query.periodoId, query.seccionId, user.id);
     
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

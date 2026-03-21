@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { portalService } from '@/api/services/portal.service';
+import { useToast } from '@/composables/useToast';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import { DownloadIcon, FileTextIcon } from 'lucide-vue-next';
+
+const toast = useToast();
 
 const libretasData = ref<any>(null);
 const loading = ref(true);
@@ -29,8 +32,10 @@ const download = async (periodoId: string) => {
     document.body.appendChild(link);
     link.click();
     link.remove();
+    window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Error al descargar libreta', error);
+    toast.error('No se pudo descargar la libreta.');
   } finally {
     downloading.value = null;
   }

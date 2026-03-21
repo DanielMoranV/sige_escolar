@@ -7,9 +7,9 @@ export class SiagieService {
 
   async getSyncLog(slug: string, anioEscolarId: string) {
     return this.prisma.$queryRawUnsafe<any[]>(`
-      SELECT l.*, u.nombres as exportado_por_nombre 
+      SELECT l.*, u.nombres as generado_por_nombre
       FROM "${slug}".siagie_sync_log l
-      LEFT JOIN public.usuarios u ON l.exportado_por = u.id
+      LEFT JOIN public.usuarios u ON l.generado_por = u.id
       WHERE l.anio_escolar_id = '${anioEscolarId}'
       ORDER BY l.created_at DESC
     `);
@@ -19,9 +19,8 @@ export class SiagieService {
     const result = await this.prisma.$queryRawUnsafe<any[]>(`
       UPDATE "${slug}".siagie_sync_log
       SET estado = '${dto.estado}'::"${slug}".estado_sync,
-          observacion = ${dto.observacion ? `'${dto.observacion}'` : 'NULL'},
-          cargado_en = NOW(),
-          cargado_por = '${usuarioId}'
+          notas = ${dto.observacion ? `'${dto.observacion.replace(/'/g, "''")}'` : 'NULL'},
+          enviado_en = NOW()
       WHERE id = '${id}'
       RETURNING *
     `);
