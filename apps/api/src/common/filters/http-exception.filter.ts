@@ -23,6 +23,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         if (Array.isArray(exceptionResponse.message)) {
           errors = exceptionResponse.message;
           message = 'Error de validación';
+          this.logger.warn(`Validation error on ${request.url}: ${JSON.stringify(errors)}`);
         }
       }
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {

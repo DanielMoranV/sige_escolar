@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { ExcelService } from '../siagie/excel.service';
 import { CreateAsistenciaBulkDto, AsistenciaItemDto } from './dto/create-asistencia-bulk.dto';
 import { CreateJustificacionDto, ReviewJustificacionDto } from './dto/justificacion.dto';
 
@@ -7,7 +8,10 @@ import { CreateJustificacionDto, ReviewJustificacionDto } from './dto/justificac
 export class AsistenciaService {
   private readonly logger = new Logger(AsistenciaService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly excelService: ExcelService
+  ) {}
 
   async getSeccionAsistencia(slug: string, seccionId: string, fecha: string) {
     // 1. Obtener lista de estudiantes matriculados en la sección
@@ -177,15 +181,13 @@ export class AsistenciaService {
     return { message: 'Alertas recalculadas correctamente' };
   }
 
-  async exportarSiagie(slug: string, mes: number, anioEscolarId: string, seccionId?: string) {
-    // Simulación de exportación SIAGIE
-    // En un caso real se usaría exceljs para generar el .xlsx
+  async exportarSiagie(slug: string, mes: number, anioEscolarId: string, seccionId?: string): Promise<Buffer> {
     const whereSeccion = seccionId ? `AND m.seccion_id = '${seccionId}'` : '';
     
     const data = await this.prisma.$queryRawUnsafe<any[]>(`
       SELECT 
-        e.dni, e.apellido_paterno, e.apellido_materno, e.nombres,
-        COUNT(CASE WHEN a.estado IN ('PRESENTE', 'TARDANZA') THEN 1 END) as asistencias,
+        e.codigo_siagie, e.dni, e.apellido_paterno, e.apellido_materno, e.nombres,
+        COUNT(CASE WHEN a.estado IN ('PRESENTE', 'TARDANZA', 'LM') THEN 1 END) as asistencias,
         COUNT(CASE WHEN a.estado = 'FALTA_JUSTIFICADA' THEN 1 END) as faltas_justificadas,
         COUNT(CASE WHEN a.estado = 'FALTA_INJUSTIFICADA' THEN 1 END) as faltas_injustificadas
       FROM "${slug}".matriculas m
@@ -196,11 +198,12 @@ export class AsistenciaService {
       ORDER BY e.apellido_paterno, e.apellido_materno
     `);
 
-    return {
-      mes,
-      data,
-      totalDiasLectivos: 20, // Hardcoded para el ejemplo
-      timestamp: new Date().toISOString()
-    };
+    // Registrar intención de exportación al SIAGIE
+    await this.prisma.$executeRawUnsafe(`
+      INSERT INTO "${slug}".siagie_sync_log (modulo, anio_escolar_id, estado, generado_en)
+      VALUES ('ASISTENCIA', '${anioEscolarId}', 'GENERADO'::"${slug}".estado_sync, NOW())
+    `);
+
+    return this.excelService.generateAsistenciaExcel(data, mes, 20);
   }
 }

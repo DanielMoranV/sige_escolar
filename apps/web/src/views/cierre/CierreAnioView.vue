@@ -161,8 +161,15 @@ async function handleCalcular() {
 async function handleExport() {
   isExporting.value = true;
   try {
-    await cierreService.exportExcel(anioId.value);
-    alert('Archivo Excel para SIAGIE generado. Vaya a "Panel SIAGIE" para descargarlo y confirmar su carga.');
+    const blob = await cierreService.exportExcel(anioId.value);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Cierre_Anual_SIAGIE_${anioId.value}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    alert('Archivo Excel para SIAGIE descargado exitosamente.');
   } catch (err) {
     alert('Error al generar la exportación.');
   } finally {

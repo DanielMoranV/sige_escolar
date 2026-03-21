@@ -1,11 +1,17 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { PromocionService } from './promocion.service';
+import { ExcelService } from '../siagie/excel.service';
 
 @Injectable()
 export class CierreService {
   private readonly logger = new Logger(CierreService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly promocionService: PromocionService,
+    private readonly excelService: ExcelService
+  ) {}
 
   async calcularCierre(slug: string, anioEscolarId: string, usuarioId: string) {
     // 1. Obtener todas las matrículas activas del año
@@ -17,45 +23,23 @@ export class CierreService {
       WHERE m.anio_escolar_id = '${anioEscolarId}' AND m.estado = 'ACTIVA'
     `);
 
-    // 2. Por cada matrícula, evaluar las notas finales de las áreas
-    // Para simplificar en este prototipo, simularemos el resultado basado en una regla básica
-    // En producción se traería la grilla anual completa y se contaría cuántas competencias tienen 'C'
-    
+    // 2. Por cada matrícula, evaluar las notas finales de las áreas usando el Motor de Promoción
     for (const matricula of matriculas) {
-      let resultado = 'PROMOVIDO'; // Default
-      
-      // Regla de exención
-      if (matricula.nivel === 'INICIAL' || (matricula.nivel === 'PRIMARIA' && matricula.numero === 1)) {
-        resultado = 'PROMOVIDO';
-      } else {
-        // Obtenemos un conteo simulado de competencias desaprobadas (C o < 11)
-        const notasFinales = await this.prisma.$queryRawUnsafe<any[]>(`
-          SELECT COUNT(*) as desaprobadas
-          FROM "${slug}".notas_periodo n
-          WHERE n.matricula_id = '${matricula.id}'
-          AND (n.calificativo_literal = 'C' OR n.calificativo_numerico <= 10)
-        `);
-        
-        const desaprobadas = parseInt(notasFinales[0]?.desaprobadas || '0', 10);
-        
-        // Simulación de la regla: 
-        // 0-3 desaprobadas (competencias) -> PROMOVIDO
-        // 4-8 desaprobadas -> RECUPERACION
-        // > 8 desaprobadas -> PERMANECE
-        if (desaprobadas > 8) {
-          resultado = 'PERMANECE';
-        } else if (desaprobadas >= 4) {
-          resultado = 'RECUPERACION';
-        }
-      }
+      const { resultado, areasRecuperacion } = await this.promocionService.calcularResultadoMatricula(
+        slug, 
+        matricula.id, 
+        matricula.nivel, 
+        matricula.numero
+      );
 
       await this.prisma.$executeRawUnsafe(`
         INSERT INTO "${slug}".cierre_anio 
           (matricula_id, resultado, promedios_areas, areas_recuperacion, calculado_en, calculado_por)
         VALUES 
-          ('${matricula.id}', '${resultado}'::"${slug}".resultado_anio, '{}', '[]', NOW(), '${usuarioId}')
+          ('${matricula.id}', '${resultado}'::"${slug}".resultado_anio, '{}', '${JSON.stringify(areasRecuperacion)}', NOW(), '${usuarioId}')
         ON CONFLICT (matricula_id) DO UPDATE SET
           resultado = EXCLUDED.resultado,
+          areas_recuperacion = EXCLUDED.areas_recuperacion,
           calculado_en = NOW(),
           calculado_por = EXCLUDED.calculado_por,
           es_caso_especial = false
@@ -94,19 +78,16 @@ export class CierreService {
     return { message: 'Caso especial registrado' };
   }
 
-  async exportExcel(slug: string, anioEscolarId: string) {
+  async exportExcel(slug: string, anioEscolarId: string): Promise<Buffer> {
     const data = await this.getResultado(slug, anioEscolarId);
     
     // Log SIAGIE export intent
     await this.prisma.$executeRawUnsafe(`
-      INSERT INTO "${slug}".siagie_sync_log (modulo, anio_escolar_id, estado, exportado_en, archivo_nombre)
-      VALUES ('NOTAS_FINALES'::"${slug}".modulo_siagie, '${anioEscolarId}', 'EXPORTADO'::"${slug}".estado_sync, NOW(), 'Cierre_Anual_${anioEscolarId}.xlsx')
+      INSERT INTO "${slug}".siagie_sync_log (modulo, anio_escolar_id, estado, generado_en)
+      VALUES ('NOTAS_FINALES', '${anioEscolarId}', 'GENERADO'::"${slug}".estado_sync, NOW())
     `);
 
-    return {
-      message: 'Exportación generada',
-      timestamp: new Date().toISOString(),
-      data
-    };
+    // We generate the Excel using ExcelService (we need to inject it)
+    return this.excelService.generateCierreExcel(data);
   }
 }

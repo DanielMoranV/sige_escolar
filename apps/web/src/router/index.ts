@@ -10,11 +10,13 @@ import { notasRoutes } from './routes/notas.routes';
 import { reportesRoutes } from './routes/reportes.routes';
 import { cierreRoutes } from './routes/cierre.routes';
 import { siagieRoutes } from './routes/siagie.routes';
+import { portalRoutes } from './routes/portal.routes';
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     ...authRoutes,
+    ...portalRoutes,
     {
       path: '/',
       component: () => import('../layouts/DashboardLayout.vue'),
@@ -62,6 +64,10 @@ router.beforeEach((to, _from, next) => {
   const roles = to.meta.roles as string[] | undefined;
   if (roles && !roles.includes(auth.user?.rol || '')) {
     return next('/dashboard');
+  }
+
+  if (to.path === '/dashboard' && auth.user?.rol === 'APODERADO') {
+    return next('/portal');
   }
 
   if (to.path === '/login' && auth.isAuthenticated) {

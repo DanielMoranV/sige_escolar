@@ -18,7 +18,10 @@ export const notasService = {
     return data.data;
   },
   async exportSiagie(params: { periodoId: string; seccionId: string }) {
-    const { data } = await apiClient.get('notas/export/siagie', { params });
-    return data.data;
+    const response = await apiClient.get('notas/export/siagie', { 
+      params,
+      responseType: 'blob'
+    });
+    return response.data;
   },
 };

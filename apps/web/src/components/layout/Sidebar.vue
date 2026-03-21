@@ -78,24 +78,33 @@ import {
   const router = useRouter();
 
   const menuItems = computed(() => {
-  const items = [
-    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
-    { label: 'Estudiantes', path: '/estudiantes', icon: UsersIcon },
-    { label: 'Matrículas', path: '/matriculas', icon: UserPlusIcon },
-    { label: 'Asistencia', path: '/asistencia', icon: CheckCircleIcon },
-    { label: 'Notas', path: '/notas', icon: GraduationCapIcon },
-    { label: 'Reportes', path: '/reportes', icon: FileTextIcon },
-  ];
-  if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
-    items.push({ label: 'Cierre de Año', path: '/cierre', icon: ArchiveIcon });
-    items.push({ label: 'Panel SIAGIE', path: '/siagie', icon: UploadCloudIcon });
-    items.push({ label: 'Alertas', path: '/asistencia/alertas', icon: AlertTriangleIcon });
-    items.push({ label: 'Exportar SIAGIE', path: '/asistencia/exportar', icon: DownloadIcon });
-    items.push({ label: 'Exportar Notas', path: '/notas/exportar', icon: DownloadIcon });
-    items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
-  }
-  return items;
-});
+    // Si es APODERADO, mostrar menú del portal
+    if (authStore.user?.rol === 'APODERADO') {
+      return [
+        { label: 'Mi Hijo', path: '/portal', icon: UsersIcon },
+        { label: 'Notas', path: '/portal/notas', icon: GraduationCapIcon },
+        { label: 'Libretas', path: '/portal/libretas', icon: FileTextIcon },
+      ];
+    }
+
+    const items = [
+      { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
+      { label: 'Estudiantes', path: '/estudiantes', icon: UsersIcon },
+      { label: 'Matrículas', path: '/matriculas', icon: UserPlusIcon },
+      { label: 'Asistencia', path: '/asistencia', icon: CheckCircleIcon },
+      { label: 'Notas', path: '/notas', icon: GraduationCapIcon },
+      { label: 'Reportes', path: '/reportes', icon: FileTextIcon },
+    ];
+    if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
+      items.push({ label: 'Cierre de Año', path: '/cierre', icon: ArchiveIcon });
+      items.push({ label: 'Panel SIAGIE', path: '/siagie', icon: UploadCloudIcon });
+      items.push({ label: 'Alertas', path: '/asistencia/alertas', icon: AlertTriangleIcon });
+      items.push({ label: 'Exportar SIAGIE', path: '/asistencia/exportar', icon: DownloadIcon });
+      items.push({ label: 'Exportar Notas', path: '/notas/exportar', icon: DownloadIcon });
+      items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
+    }
+    return items;
+  });
 
 function formatRol(rol?: string): string {
   const mapa: Record<string, string> = {

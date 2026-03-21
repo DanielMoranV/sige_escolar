@@ -106,8 +106,15 @@ onMounted(async () => {
 async function handleExport() {
   isExporting.value = true;
   try {
-    const data = await notasService.exportSiagie(filters.value);
-    exportData.value = data;
+    const blob = await notasService.exportSiagie(filters.value);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Notas_SIAGIE_${filters.value.periodoId}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    alert('Archivo de notas descargado correctamente.');
   } catch (error) {
     alert('Error al generar el reporte');
   } finally {

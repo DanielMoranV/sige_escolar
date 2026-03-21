@@ -114,12 +114,21 @@ async function handleExport() {
   isExporting.value = true;
   try {
     const anio = await schoolConfigService.getAnioEscolar();
-    const data = await asistenciaService.exportSiagie({
+    const blob = await asistenciaService.exportSiagie({
       mes: parseInt(selectedMes.value, 10),
       anioEscolarId: anio.id,
       seccionId: selectedSeccion.value || undefined
     });
-    exportData.value = data;
+    
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Asistencia_SIAGIE_${getMesNombre(selectedMes.value)}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    
+    // Opcional: mostrar mensaje de éxito
   } catch (error) {
     alert('Error al generar el reporte');
   } finally {

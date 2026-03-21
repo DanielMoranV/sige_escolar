@@ -8,10 +8,12 @@ import {
   Query,
   UseGuards,
   Headers,
+  Res,
 } from '@nestjs/common';
 import { AsistenciaService } from './asistencia.service';
 import { CreateAsistenciaBulkDto } from './dto/create-asistencia-bulk.dto';
 import { CreateJustificacionDto, ReviewJustificacionDto } from './dto/justificacion.dto';
+import { ExportSiagieQueryDto } from './dto/export-siagie-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -80,12 +82,19 @@ export class AsistenciaController {
 
   @Get('export/siagie')
   @Roles('DIRECTOR')
-  exportarSiagie(
+  async exportarSiagie(
     @Headers('x-tenant-slug') slug: string,
-    @Query('mes') mes: number,
-    @Query('anioEscolarId') anioEscolarId: string,
-    @Query('seccionId') seccionId?: string,
+    @Query() query: ExportSiagieQueryDto,
+    @Res() res: any,
   ) {
-    return this.asistenciaService.exportarSiagie(slug, mes, anioEscolarId, seccionId);
+    const excelBuffer = await this.asistenciaService.exportarSiagie(slug, query.mes, query.anioEscolarId, query.seccionId);
+    
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="Asistencia_SIAGIE_${query.mes}.xlsx"`,
+      'Content-Length': excelBuffer.length,
+    });
+    
+    res.end(excelBuffer);
   }
 }

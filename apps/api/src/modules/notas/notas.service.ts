@@ -1,12 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { ExcelService } from '../siagie/excel.service';
 import { SaveGrillaDto } from './dto/save-grilla.dto';
 
 @Injectable()
 export class NotasService {
   private readonly logger = new Logger(NotasService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly excelService: ExcelService
+  ) {}
 
   async getGrilla(slug: string, seccionId: string, periodoId: string, areaId: string) {
     // 1. Obtener competencias del área
@@ -114,12 +118,11 @@ export class NotasService {
     return { message: 'Periodo cerrado correctamente' };
   }
 
-  async exportarSiagie(slug: string, periodoId: string, seccionId: string) {
-    // Retorna la grilla formateada para SIAGIE
+  async exportarSiagie(slug: string, periodoId: string, seccionId: string): Promise<Buffer> {
     const data = await this.prisma.$queryRawUnsafe<any[]>(`
       SELECT 
-        e.dni, e.apellido_paterno, e.apellido_materno, e.nombres,
-        c.id as competencia_id, c.nombre_display as competencia_nombre,
+        e.codigo_siagie, e.dni, e.apellido_paterno, e.apellido_materno, e.nombres,
+        c.nombre_display as competencia_nombre, a.nombre_display as area_nombre,
         n.calificativo_literal, n.calificativo_numerico, n.conclusion_descriptiva
       FROM "${slug}".matriculas m
       JOIN "${slug}".estudiantes e ON m.estudiante_id = e.id
@@ -131,11 +134,14 @@ export class NotasService {
       ORDER BY e.apellido_paterno, e.apellido_materno, c.orden
     `);
 
-    return {
-      periodoId,
-      seccionId,
-      timestamp: new Date().toISOString(),
-      data
-    };
+    const periodo = await this.prisma.$queryRawUnsafe<any[]>(`SELECT nombre FROM "${slug}".periodos WHERE id = '${periodoId}'`);
+
+    // Log sync
+    await this.prisma.$executeRawUnsafe(`
+      INSERT INTO "${slug}".siagie_sync_log (modulo, periodo_id, estado, generado_en)
+      VALUES ('CALIFICACIONES', '${periodoId}', 'GENERADO'::"${slug}".estado_sync, NOW())
+    `);
+
+    return this.excelService.generateNotasExcel(data, periodo[0]?.nombre || 'Periodo');
   }
 }

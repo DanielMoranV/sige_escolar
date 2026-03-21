@@ -5,6 +5,12 @@ export const reportesService = {
     const { data } = await apiClient.get(`reportes/libreta/${matriculaId}/${periodoId}`);
     return data.data;
   },
+  async downloadLibretaPdf(matriculaId: string, periodoId: string) {
+    const response = await apiClient.get(`reportes/libreta/${matriculaId}/${periodoId}/pdf`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  },
   async getSeccionRendimiento(seccionId: string) {
     const { data } = await apiClient.get(`reportes/rendimiento/seccion/${seccionId}`);
     return data.data;

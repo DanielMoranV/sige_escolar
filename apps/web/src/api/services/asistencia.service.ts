@@ -26,7 +26,10 @@ export const asistenciaService = {
     return data.data;
   },
   async exportSiagie(params: { mes: number; anioEscolarId: string; seccionId?: string }) {
-    const { data } = await apiClient.get('asistencia/export/siagie', { params });
-    return data.data;
+    const response = await apiClient.get('asistencia/export/siagie', { 
+      params,
+      responseType: 'blob'
+    });
+    return response.data;
   },
 };

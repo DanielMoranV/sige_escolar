@@ -14,6 +14,8 @@ import { NotasModule } from './modules/notas/notas.module';
 import { ReportesModule } from './modules/reportes/reportes.module';
 import { CierreModule } from './modules/cierre/cierre.module';
 import { SiagieModule } from './modules/siagie/siagie.module';
+import { PortalModule } from './modules/portal/portal.module';
+import { JobsModule } from './jobs/jobs.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { SiagieModule } from './modules/siagie/siagie.module';
     ReportesModule,
     CierreModule,
     SiagieModule,
+    PortalModule,
+    JobsModule,
   ],
 })
 export class AppModule {}

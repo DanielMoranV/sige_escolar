@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Query, UseGuards, Headers, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, Headers, Param, Res } from '@nestjs/common';
 import { NotasService } from './notas.service';
 import { SaveGrillaDto } from './dto/save-grilla.dto';
+import { GetGrillaQueryDto, ExportNotasQueryDto } from './dto/get-grilla-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -14,11 +15,9 @@ export class NotasController {
   @Get('grilla')
   getGrilla(
     @Headers('x-tenant-slug') slug: string,
-    @Query('seccionId') seccionId: string,
-    @Query('periodoId') periodoId: string,
-    @Query('areaId') areaId: string,
+    @Query() query: GetGrillaQueryDto,
   ) {
-    return this.notasService.getGrilla(slug, seccionId, periodoId, areaId);
+    return this.notasService.getGrilla(slug, query.seccionId, query.periodoId, query.areaId);
   }
 
   @Post('grilla')
@@ -52,11 +51,19 @@ export class NotasController {
 
   @Get('export/siagie')
   @Roles('DIRECTOR')
-  exportarSiagie(
+  async exportarSiagie(
     @Headers('x-tenant-slug') slug: string,
-    @Query('periodoId') periodoId: string,
-    @Query('seccionId') seccionId: string,
+    @Query() query: ExportNotasQueryDto,
+    @Res() res: any,
   ) {
-    return this.notasService.exportarSiagie(slug, periodoId, seccionId);
+    const excelBuffer = await this.notasService.exportarSiagie(slug, query.periodoId, query.seccionId);
+    
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="Notas_SIAGIE_${query.periodoId}.xlsx"`,
+      'Content-Length': excelBuffer.length,
+    });
+    
+    res.end(excelBuffer);
   }
 }

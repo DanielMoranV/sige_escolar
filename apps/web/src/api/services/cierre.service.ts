@@ -15,7 +15,9 @@ export const cierreService = {
     return data;
   },
   async exportExcel(anioEscolarId: string) {
-    const { data } = await apiClient.post(`cierre/export/excel/${anioEscolarId}`);
-    return data;
+    const response = await apiClient.post(`cierre/export/excel/${anioEscolarId}`, {}, {
+      responseType: 'blob'
+    });
+    return response.data;
   }
 };

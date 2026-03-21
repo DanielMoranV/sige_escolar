@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Headers, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Headers, Query, Res } from '@nestjs/common';
 import { CierreService } from './cierre.service';
+import { GetResultadoQueryDto } from './dto/get-resultado-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -25,9 +26,9 @@ export class CierreController {
   getResultado(
     @Headers('x-tenant-slug') slug: string,
     @Param('anioEscolarId') anioEscolarId: string,
-    @Query('seccionId') seccionId?: string,
+    @Query() query: GetResultadoQueryDto,
   ) {
-    return this.cierreService.getResultado(slug, anioEscolarId, seccionId);
+    return this.cierreService.getResultado(slug, anioEscolarId, query.seccionId);
   }
 
   @Patch('caso-especial/:matriculaId')
@@ -42,10 +43,19 @@ export class CierreController {
 
   @Post('export/excel/:anioEscolarId')
   @Roles('DIRECTOR')
-  exportExcel(
+  async exportExcel(
     @Headers('x-tenant-slug') slug: string,
     @Param('anioEscolarId') anioEscolarId: string,
+    @Res() res: any,
   ) {
-    return this.cierreService.exportExcel(slug, anioEscolarId);
+    const excelBuffer = await this.cierreService.exportExcel(slug, anioEscolarId);
+    
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="Cierre_Anual_${anioEscolarId}.xlsx"`,
+      'Content-Length': excelBuffer.length,
+    });
+    
+    res.end(excelBuffer);
   }
 }
