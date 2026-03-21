@@ -1,6 +1,5 @@
 import { Controller, Get, Patch, Param, Body, UseGuards, Headers, Query } from '@nestjs/common';
 import { SiagieService } from './siagie.service';
-import { GetSyncLogQueryDto } from './dto/get-sync-log-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -15,9 +14,9 @@ export class SiagieController {
   @Roles('DIRECTOR', 'SECRETARIA')
   getSyncLog(
     @Headers('x-tenant-slug') slug: string,
-    @Query() query: GetSyncLogQueryDto,
+    @Query('anioEscolarId') anioEscolarId: string,
   ) {
-    return this.siagieService.getSyncLog(slug, query.anioEscolarId);
+    return this.siagieService.getSyncLog(slug, anioEscolarId);
   }
 
   @Patch('sync-log/:id/confirmar')

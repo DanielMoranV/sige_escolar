@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { portalService } from '@/api/services/portal.service';
 import BaseButton from '@/components/ui/BaseButton.vue';
-import { ArrowDownTrayIcon, DocumentIcon } from '@heroicons/vue/24/outline';
+import { DownloadIcon, FileTextIcon } from 'lucide-vue-next';
 
 const libretasData = ref<any>(null);
 const loading = ref(true);
@@ -52,7 +52,7 @@ const download = async (periodoId: string) => {
       <div v-for="libreta in libretasData.libretas" :key="libreta.periodo_id" 
            class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center text-center space-y-4 hover:border-primary-300 transition-colors">
         <div class="bg-blue-50 p-4 rounded-full">
-          <DocumentIcon class="h-10 w-10 text-primary-600" />
+          <FileTextIcon class="h-10 w-10 text-primary-600" />
         </div>
         <div>
           <h3 class="font-bold text-lg text-gray-900">{{ libreta.periodo_nombre }}</h3>
@@ -64,7 +64,7 @@ const download = async (periodoId: string) => {
           :loading="downloading === libreta.periodo_id"
         >
           <template #icon>
-            <ArrowDownTrayIcon class="h-5 w-5 mr-2" />
+            <DownloadIcon class="h-5 w-5 mr-2" />
           </template>
           Descargar PDF
         </BaseButton>
@@ -72,7 +72,7 @@ const download = async (periodoId: string) => {
     </div>
 
     <div v-else class="text-center py-20 bg-white rounded-lg border border-dashed border-gray-300">
-      <DocumentIcon class="mx-auto h-12 w-12 text-gray-400" />
+      <FileTextIcon class="mx-auto h-12 w-12 text-gray-400" />
       <h3 class="mt-2 text-sm font-medium text-gray-900">No hay libretas disponibles</h3>
       <p class="mt-1 text-sm text-gray-500">Las libretas aparecerán aquí una vez que la dirección las publique.</p>
     </div>

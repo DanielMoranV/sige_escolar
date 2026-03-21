@@ -108,7 +108,8 @@ async function loadLogs() {
   if (!anioId.value) return;
   isLoading.value = true;
   try {
-    logs.value = await siagieService.getSyncLog(anioId.value);
+    const response = await siagieService.getSyncLog(anioId.value);
+    logs.value = response.data || [];
   } catch (err) {
     console.error(err);
   } finally {

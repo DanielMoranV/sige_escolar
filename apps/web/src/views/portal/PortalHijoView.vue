@@ -3,7 +3,12 @@ import { ref, onMounted } from 'vue';
 import { portalService } from '@/api/services/portal.service';
 import StatCard from '@/components/ui/StatCard.vue';
 import BaseBadge from '@/components/ui/BaseBadge.vue';
-import { UserIcon, AcademicCapIcon, CalendarIcon, ClipboardDocumentListIcon } from '@heroicons/vue/24/outline';
+import { 
+  UserIcon, 
+  GraduationCapIcon, 
+  CalendarIcon, 
+  ClipboardListIcon 
+} from 'lucide-vue-next';
 
 const hijo = ref<any>(null);
 const asistencia = ref<any>(null);
@@ -84,7 +89,7 @@ const getEstadoClass = (estado: string) => {
           title="Rendimiento"
           value="Ver Notas"
           type="info"
-          :icon="AcademicCapIcon"
+          :icon="GraduationCapIcon"
           @click="$router.push('/portal/notas')"
           class="cursor-pointer hover:bg-blue-50 transition-colors"
         />
@@ -130,7 +135,7 @@ const getEstadoClass = (estado: string) => {
     </div>
 
     <div v-else class="text-center py-20 bg-white rounded-lg shadow-sm">
-      <AcademicCapIcon class="mx-auto h-12 w-12 text-gray-400" />
+      <GraduationCapIcon class="mx-auto h-12 w-12 text-gray-400" />
       <h3 class="mt-2 text-sm font-medium text-gray-900">No se encontró información</h3>
       <p class="mt-1 text-sm text-gray-500">No tienes hijos asociados con matrícula activa.</p>
     </div>
