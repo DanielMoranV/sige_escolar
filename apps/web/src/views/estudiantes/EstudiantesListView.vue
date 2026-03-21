@@ -33,7 +33,7 @@
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <BaseTable
         :columns="headers"
-        :data="data?.data || []"
+        :data="estudiantesData"
         :loading="isLoading"
       >
         <template #cell-nombre="{ row }">
@@ -72,8 +72,8 @@
       <div class="px-6 py-4 border-t border-gray-100">
         <BasePagination
           :currentPage="page"
-          :totalPages="data?.meta?.totalPages || 1"
-          :total="data?.meta?.total || 0"
+          :totalPages="totalPages"
+          :total="totalItems"
           @page-change="page = $event"
         />
       </div>
@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { 
@@ -157,10 +157,22 @@ const grados = [
   { label: '6°', value: '6' },
 ];
 
-const { data, isLoading } = useQuery({
+const { data: queryResult, isLoading } = useQuery({
   queryKey: ['estudiantes', page, search],
   queryFn: () => estudiantesService.getEstudiantes(page.value, limit.value, search.value),
 });
+
+const estudiantesData = computed(() => {
+  const res = queryResult.value;
+  if (!res) return [];
+  // Manejar ambos casos: si viene como res.data o si el objeto res ya es la data (dependiendo del interceptor)
+  if (Array.isArray(res.data)) return res.data;
+  if (Array.isArray(res)) return res;
+  return [];
+});
+
+const totalItems = computed(() => queryResult.value?.meta?.total || 0);
+const totalPages = computed(() => queryResult.value?.meta?.totalPages || 1);
 
 const handleSearch = debounce(() => {
   page.value = 1;

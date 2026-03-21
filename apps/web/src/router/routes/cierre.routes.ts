@@ -1,6 +1,6 @@
 export const cierreRoutes = [
   {
-    path: '/cierre',
+    path: 'cierre',
     name: 'cierre-anio',
     component: () => import('../../views/cierre/CierreAnioView.vue'),
     meta: { requiresAuth: true, roles: ['DIRECTOR', 'SECRETARIA'] },

@@ -52,6 +52,7 @@ export class AuthService {
         rol: user.rol,
         tenantId: user.tenant_id,
         tenantName: user.tenant?.nombre,
+        tenantSlug: user.tenant?.slug,
         needsPasswordChange: user.needs_password_change,
       },
     };
@@ -123,6 +124,7 @@ export class AuthService {
       rol: user.rol,
       tenantId: user.tenant_id,
       tenantName: user.tenant?.nombre,
+      tenantSlug: user.tenant?.slug,
       activo: user.activo,
       ultimo_acceso: user.ultimo_acceso,
     };

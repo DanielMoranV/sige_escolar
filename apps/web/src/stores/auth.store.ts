@@ -9,6 +9,7 @@ interface AuthUser {
   rol: string;
   tenantId: string | null;
   tenantName?: string;
+  tenantSlug?: string;
   needsPasswordChange?: boolean;
 }
 

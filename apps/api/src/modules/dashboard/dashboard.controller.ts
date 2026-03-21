@@ -1,9 +1,9 @@
-import { Controller, Get, UseGuards, Headers, NotFoundException } from '@nestjs/common';
+import { Controller, Get, UseGuards, Headers, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { SchoolConfigService } from '../config/school-config.service';
 
-@Controller('dashboard')
+@Controller('dashboard-escolar')
 @UseGuards(JwtAuthGuard)
 export class DashboardController {
   constructor(
@@ -13,7 +13,7 @@ export class DashboardController {
 
   @Get('stats')
   async getStats(@Headers('x-tenant-slug') slug: string) {
-    if (!slug) throw new NotFoundException('Tenant no especificado');
+    if (!slug) throw new BadRequestException('Header x-tenant-slug es requerido');
     const anio = await this.configService.getAnioEscolar(slug);
     return this.dashboardService.getStats(slug, anio.id);
   }
