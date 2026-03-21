@@ -28,7 +28,7 @@
           <span class="font-medium text-gray-900">{{ row.apellido_paterno }} {{ row.apellido_materno }}, {{ row.nombres }}</span>
         </template>
         <template #cell-acciones="{ row }">
-          <BaseButton size="sm" variant="secondary" @click="previewLibreta(row.matricula_id)">
+          <BaseButton size="sm" variant="secondary" @click="previewLibreta(row.id)">
             <FileTextIcon class="w-4 h-4" />
             Ver Libreta
           </BaseButton>
@@ -141,6 +141,7 @@ const estudiantes = ref<any[]>([]);
 const showPreview = ref(false);
 const libretaLoading = ref(false);
 const libretaData = ref<any>(null);
+const currentMatriculaId = ref('');
 
 const canLoad = computed(() => periodoId.value && seccionId.value);
 
@@ -163,7 +164,7 @@ async function loadEstudiantes() {
   isLoading.value = true;
   try {
     const { data } = await apiClient.get(`/matriculas?seccionId=${seccionId.value}&limit=100`);
-    estudiantes.value = data.data || [];
+    estudiantes.value = data.data?.data || [];
     hasLoaded.value = true;
   } catch (err) {
     alert('Error al cargar estudiantes');
@@ -173,6 +174,7 @@ async function loadEstudiantes() {
 }
 
 async function previewLibreta(matriculaId: string) {
+  currentMatriculaId.value = matriculaId;
   showPreview.value = true;
   libretaLoading.value = true;
   try {
@@ -185,7 +187,19 @@ async function previewLibreta(matriculaId: string) {
   }
 }
 
-function handleDownload() {
-  alert('Funcionalidad de descarga de PDF (Puppeteer) se integrará en el backend prod. Vista previa generada.');
+async function handleDownload() {
+  try {
+    const blob = await reportesService.downloadLibretaPdf(currentMatriculaId.value, periodoId.value);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Libreta_${libretaData.value?.estudiante?.dni || currentMatriculaId.value}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch {
+    alert('Error al generar el PDF');
+  }
 }
 </script>
