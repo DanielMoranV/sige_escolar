@@ -5,6 +5,7 @@
       <span v-if="required" class="text-red-500 ml-0.5">*</span>
     </label>
     <input
+      v-bind="$attrs"
       :id="inputId"
       :type="type"
       :value="modelValue"
@@ -27,6 +28,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+
+defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<{
   modelValue?: string | number;

@@ -355,6 +355,18 @@ CREATE TABLE {SCHEMA}.alertas_asistencia (
 );
 CREATE INDEX idx_alertas_nivel ON {SCHEMA}.alertas_asistencia(nivel_alerta);
 
+-- Configuración de umbrales de asistencia (RM 281-2016-MINEDU: 30% inasistencias → repitencia)
+CREATE TABLE IF NOT EXISTS {SCHEMA}.config_asistencia (
+    id                  UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    anio_escolar_id     UUID         NOT NULL REFERENCES {SCHEMA}.anio_escolar_config(id) UNIQUE,
+    tardanzas_por_falta SMALLINT     NOT NULL DEFAULT 3,
+    umbral_amarillo     DECIMAL(5,2) NOT NULL DEFAULT 10.00,
+    umbral_naranja      DECIMAL(5,2) NOT NULL DEFAULT 20.00,
+    umbral_rojo         DECIMAL(5,2) NOT NULL DEFAULT 30.00,
+    contar_tardanzas    BOOLEAN      NOT NULL DEFAULT TRUE,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
 CREATE TYPE {SCHEMA}.estado_sync AS ENUM ('PENDIENTE', 'GENERADO', 'ENVIADO', 'CONFIRMADO', 'ERROR');
 
 CREATE TABLE {SCHEMA}.siagie_sync_log (

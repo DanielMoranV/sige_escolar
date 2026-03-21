@@ -32,6 +32,7 @@ export class TenantSeedService {
     this.logger.log(`Seeding base data for tenant: ${slug}`);
     await this.seedGrados(slug, niveles);
     await this.seedAreasAndCompetencias(slug, anioEscolarId, niveles);
+    await this.seedConfigAsistencia(slug, anioEscolarId);
     this.logger.log(`Base seed completed for tenant: ${slug}`);
   }
 
@@ -105,5 +106,15 @@ export class TenantSeedService {
     }
 
     this.logger.log(`Seeded areas and competencias for tenant: ${slug}`);
+  }
+
+  private async seedConfigAsistencia(slug: string, anioEscolarId: string): Promise<void> {
+    await this.prisma.$executeRawUnsafe(`
+      INSERT INTO "${slug}".config_asistencia
+        (anio_escolar_id, tardanzas_por_falta, umbral_amarillo, umbral_naranja, umbral_rojo, contar_tardanzas)
+      VALUES ('${anioEscolarId}', 3, 10.00, 20.00, 30.00, true)
+      ON CONFLICT (anio_escolar_id) DO NOTHING
+    `);
+    this.logger.log(`Seeded config_asistencia for tenant: ${slug}`);
   }
 }

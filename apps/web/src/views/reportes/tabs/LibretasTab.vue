@@ -115,6 +115,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { SearchIcon, FileTextIcon, DownloadIcon } from 'lucide-vue-next';
 import { schoolConfigService } from '../../../api/services/school-config.service';
+import { useNivelStore } from '../../../stores/nivel.store';
 import { reportesService } from '../../../api/services/reportes.service';
 import apiClient from '../../../api/client';
 import BaseSelect from '../../../components/ui/BaseSelect.vue';
@@ -122,10 +123,17 @@ import BaseButton from '../../../components/ui/BaseButton.vue';
 import BaseTable from '../../../components/ui/BaseTable.vue';
 import BaseModal from '../../../components/ui/BaseModal.vue';
 
+const nivelStore = useNivelStore();
 const periodoId = ref('');
 const seccionId = ref('');
 const periodosOptions = ref<any[]>([]);
-const seccionesOptions = ref<any[]>([]);
+const rawSecciones = ref<any[]>([]);
+const seccionesOptions = computed(() => {
+  const filtered = nivelStore.nivelActivo === 'TODOS'
+    ? rawSecciones.value
+    : rawSecciones.value.filter(s => s.nivel === nivelStore.nivelActivo);
+  return filtered.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id }));
+});
 const isLoading = ref(false);
 const hasLoaded = ref(false);
 const estudiantes = ref<any[]>([]);
@@ -148,7 +156,7 @@ onMounted(async () => {
     schoolConfigService.getSecciones(),
   ]);
   periodosOptions.value = p.map((item: any) => ({ label: item.nombre, value: item.id }));
-  seccionesOptions.value = s.map((item: any) => ({ label: `${item.grado_nombre} - ${item.nombre}`, value: item.id }));
+  rawSecciones.value = s;
 });
 
 async function loadEstudiantes() {

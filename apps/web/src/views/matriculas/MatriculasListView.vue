@@ -90,6 +90,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
+import { useNivelStore } from '../../stores/nivel.store';
 import { useRouter } from 'vue-router';
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { UserPlusIcon, UserMinusIcon, EyeIcon } from 'lucide-vue-next';
@@ -134,7 +135,17 @@ const estadosOptions = [
   { label: 'Trasladada', value: 'TRASLADADA' },
 ];
 
-const seccionesOptions = ref([{ label: 'Cargando...', value: '' }]);
+const nivelStore = useNivelStore();
+const rawSecciones = ref<any[]>([]);
+const seccionesOptions = computed(() => {
+  const filtered = nivelStore.nivelActivo === 'TODOS'
+    ? rawSecciones.value
+    : rawSecciones.value.filter(s => s.nivel === nivelStore.nivelActivo);
+  return [
+    { label: 'Todas las secciones', value: '' },
+    ...filtered.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id })),
+  ];
+});
 
 onMounted(async () => {
   const [anio, secc] = await Promise.all([
@@ -142,13 +153,7 @@ onMounted(async () => {
     schoolConfigService.getSecciones(),
   ]);
   anioEscolar.value = anio;
-  seccionesOptions.value = [
-    { label: 'Todas las secciones', value: '' },
-    ...secc.map((s: any) => ({
-      label: `${s.grado_nombre} - ${s.nombre}`,
-      value: s.id
-    }))
-  ];
+  rawSecciones.value = secc;
 });
 
 const { data: queryResult, isLoading } = useQuery({

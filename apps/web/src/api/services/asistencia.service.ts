@@ -17,6 +17,10 @@ export const asistenciaService = {
     const { data } = await apiClient.patch(`asistencia/justificaciones/${id}/revisar`, payload);
     return data.data;
   },
+  async getHistorialEstudiante(matriculaId: string) {
+    const { data } = await apiClient.get(`asistencia/historial/${matriculaId}`);
+    return data.data;
+  },
   async getAlertas() {
     const { data } = await apiClient.get('asistencia/alertas');
     return data.data;

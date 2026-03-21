@@ -45,6 +45,14 @@ export class AsistenciaController {
     return this.asistenciaService.registerBulk(slug, seccionId, fecha, dto, user.id);
   }
 
+  @Get('historial/:matriculaId')
+  getHistorialEstudiante(
+    @Headers('x-tenant-slug') slug: string,
+    @Param('matriculaId') matriculaId: string,
+  ) {
+    return this.asistenciaService.getHistorialEstudiante(slug, matriculaId);
+  }
+
   @Get('justificaciones/pendientes')
   getJustificacionesPendientes(@Headers('x-tenant-slug') slug: string) {
     return this.asistenciaService.getJustificacionesPendientes(slug);

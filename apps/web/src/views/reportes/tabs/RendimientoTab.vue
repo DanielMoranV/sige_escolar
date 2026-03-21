@@ -43,15 +43,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { BarChartIcon } from 'lucide-vue-next';
 import { schoolConfigService } from '../../../api/services/school-config.service';
 import { reportesService } from '../../../api/services/reportes.service';
+import { useNivelStore } from '../../../stores/nivel.store';
 import BaseSelect from '../../../components/ui/BaseSelect.vue';
 import BaseButton from '../../../components/ui/BaseButton.vue';
 
+const nivelStore = useNivelStore();
 const seccionId = ref('');
-const seccionesOptions = ref<any[]>([]);
+const rawSecciones = ref<any[]>([]);
+const seccionesOptions = computed(() => {
+  const filtered = nivelStore.nivelActivo === 'TODOS'
+    ? rawSecciones.value
+    : rawSecciones.value.filter(s => s.nivel === nivelStore.nivelActivo);
+  return filtered.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id }));
+});
 const isLoading = ref(false);
 const hasLoaded = ref(false);
 const rendimiento = ref<any[]>([]);
@@ -64,8 +72,7 @@ const niveles = [
 ];
 
 onMounted(async () => {
-  const s = await schoolConfigService.getSecciones();
-  seccionesOptions.value = s.map((item: any) => ({ label: `${item.grado_nombre} - ${item.nombre}`, value: item.id }));
+  rawSecciones.value = await schoolConfigService.getSecciones();
 });
 
 async function loadRendimiento() {

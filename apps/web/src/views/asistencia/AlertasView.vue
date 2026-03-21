@@ -16,7 +16,7 @@
       <p class="mt-4 text-gray-500">Cargando alertas...</p>
     </div>
 
-    <div v-else-if="!alertas.length" class="bg-white p-12 rounded-xl border border-gray-200 text-center">
+    <div v-else-if="!alertasFiltradas.length" class="bg-white p-12 rounded-xl border border-gray-200 text-center">
       <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
         <CheckCircleIcon class="w-8 h-8" />
       </div>
@@ -24,10 +24,10 @@
       <p class="text-gray-500 max-w-sm mx-auto">No se han detectado estudiantes que superen los umbrales de inasistencia.</p>
     </div>
 
-    <div v-else class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div v-else-if="alertasFiltradas.length" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <BaseTable
         :columns="columns"
-        :data="alertas"
+        :data="alertasFiltradas"
       >
         <template #cell-estudiante="{ row }">
           <div class="flex flex-col">
@@ -74,20 +74,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { RefreshCwIcon, CheckCircleIcon } from 'lucide-vue-next';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useNivelStore } from '../../stores/nivel.store';
 import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
 
 const toast = useToast();
+const nivelStore = useNivelStore();
 
 const router = useRouter();
 const alertas = ref<any[]>([]);
+const alertasFiltradas = computed(() =>
+  nivelStore.nivelActivo === 'TODOS'
+    ? alertas.value
+    : alertas.value.filter(a => a.nivel_educativo === nivelStore.nivelActivo)
+);
 const isLoading = ref(true);
 const isRecalculating = ref(false);
 

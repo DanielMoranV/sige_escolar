@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { ExcelService } from '../siagie/excel.service';
 import { CreateAsistenciaBulkDto, AsistenciaItemDto } from './dto/create-asistencia-bulk.dto';
@@ -45,6 +45,17 @@ export class AsistenciaService {
   }
 
   async registerBulk(slug: string, seccionId: string, fecha: string, dto: CreateAsistenciaBulkDto, usuarioId: string) {
+    const anio = await this.prisma.$queryRawUnsafe<any[]>(
+      `SELECT fecha_inicio::text, fecha_fin::text FROM "${slug}".anio_escolar_config WHERE activo = true LIMIT 1`
+    );
+    if (anio[0]) {
+      if (fecha < anio[0].fecha_inicio || fecha > anio[0].fecha_fin) {
+        throw new BadRequestException(
+          `La fecha ${fecha} está fuera del año escolar (${anio[0].fecha_inicio} — ${anio[0].fecha_fin})`
+        );
+      }
+    }
+
     for (const item of dto.items) {
       await this.prisma.$executeRawUnsafe(`
         INSERT INTO "${slug}".asistencia_diaria 
@@ -116,9 +127,35 @@ export class AsistenciaService {
     return result[0];
   }
 
+  async getHistorialEstudiante(slug: string, matriculaId: string) {
+    const result = await this.prisma.$queryRawUnsafe<any[]>(`
+      SELECT
+        a.fecha::text,
+        a.estado::text,
+        a.observacion,
+        cfg.fecha_inicio::text as anio_fecha_inicio,
+        cfg.fecha_fin::text    as anio_fecha_fin
+      FROM "${slug}".asistencia_diaria a
+      JOIN "${slug}".anio_escolar_config cfg ON cfg.activo = true
+      WHERE a.matricula_id = '${matriculaId}'
+        AND a.fecha >= cfg.fecha_inicio
+      ORDER BY a.fecha
+    `);
+
+    const anio = await this.prisma.$queryRawUnsafe<any[]>(
+      `SELECT fecha_inicio::text, fecha_fin::text FROM "${slug}".anio_escolar_config WHERE activo = true LIMIT 1`
+    );
+
+    return {
+      fechaInicio: anio[0]?.fecha_inicio ?? null,
+      fechaFin: anio[0]?.fecha_fin ?? null,
+      registros: result.map(r => ({ fecha: r.fecha, estado: r.estado, observacion: r.observacion })),
+    };
+  }
+
   async getAlertas(slug: string) {
     return this.prisma.$queryRawUnsafe<any[]>(`
-      SELECT al.*, e.nombres, e.apellido_paterno, g.nombre as grado, s.nombre as seccion
+      SELECT al.*, e.nombres, e.apellido_paterno, g.nombre as grado, s.nombre as seccion, g.nivel::text as nivel_educativo
       FROM "${slug}".alertas_asistencia al
       JOIN "${slug}".matriculas m ON al.matricula_id = m.id
       JOIN "${slug}".estudiantes e ON m.estudiante_id = e.id
@@ -130,18 +167,35 @@ export class AsistenciaService {
   }
 
   async calcularAlertas(slug: string, anioEscolarId: string) {
-    // 1. Obtener días lectivos transcurridos hasta hoy
+    // 1. Cargar configuración de umbrales (con fallback a RM 281-2016-MINEDU)
+    const configResult = await this.prisma.$queryRawUnsafe<any[]>(
+      `SELECT * FROM "${slug}".config_asistencia WHERE anio_escolar_id = '${anioEscolarId}' LIMIT 1`
+    );
+    const config = configResult[0] ?? {
+      tardanzas_por_falta: 3,
+      umbral_amarillo: 10.00,
+      umbral_naranja: 20.00,
+      umbral_rojo: 30.00,
+      contar_tardanzas: true,
+    };
+    const tardanzasPorFalta = parseInt(config.tardanzas_por_falta, 10);
+    const umbralAmarillo = parseFloat(config.umbral_amarillo);
+    const umbralNaranja = parseFloat(config.umbral_naranja);
+    const umbralRojo = parseFloat(config.umbral_rojo);
+    const contarTardanzas = config.contar_tardanzas === true || config.contar_tardanzas === 'true';
+
+    // 2. Obtener días lectivos transcurridos hasta hoy
     const today = new Date().toISOString().split('T')[0];
     const diasResult = await this.prisma.$queryRawUnsafe<any[]>(`
-      SELECT COUNT(*) as count FROM "${slug}".calendario_escolar 
+      SELECT COUNT(*) as count FROM "${slug}".calendario_escolar
       WHERE anio_escolar_id = '${anioEscolarId}' AND tipo_dia = 'LECTIVO' AND fecha <= '${today}'
     `);
     const diasTranscurridos = parseInt(diasResult[0]?.count ?? '0', 10);
     if (diasTranscurridos === 0) return { message: 'No hay días lectivos transcurridos aún' };
 
-    // 2. Obtener resumen de inasistencias por matrícula
+    // 3. Obtener resumen de inasistencias por matrícula
     const inasistencias = await this.prisma.$queryRawUnsafe<any[]>(`
-      SELECT 
+      SELECT
         m.id as matricula_id,
         COUNT(CASE WHEN a.estado = 'FALTA_INJUSTIFICADA' THEN 1 END) as faltas_injustificadas,
         COUNT(CASE WHEN a.estado = 'TARDANZA' THEN 1 END) as tardanzas
@@ -151,24 +205,25 @@ export class AsistenciaService {
       GROUP BY m.id
     `);
 
-    // 3. Upsert alertas
+    // 4. Upsert alertas con umbrales configurables y conversión tardanzas→faltas
     for (const row of inasistencias) {
       const faltas = parseInt(row.faltas_injustificadas, 10);
       const tardanzas = parseInt(row.tardanzas, 10);
-      const porcentaje = ((diasTranscurridos - faltas) / diasTranscurridos) * 100;
-      
+      const faltasEquivalentes = contarTardanzas ? Math.floor(tardanzas / tardanzasPorFalta) : 0;
+      const faltasEfectivas = faltas + faltasEquivalentes;
+      const porcentaje = ((diasTranscurridos - faltasEfectivas) / diasTranscurridos) * 100;
+      const inasistenciaPorc = (faltasEfectivas / diasTranscurridos) * 100;
+
       let nivel: 'VERDE' | 'AMARILLO' | 'NARANJA' | 'ROJO' = 'VERDE';
-      const inasistenciaPorc = (faltas / diasTranscurridos) * 100;
-      
-      if (inasistenciaPorc >= 30) nivel = 'ROJO';
-      else if (inasistenciaPorc >= 20) nivel = 'NARANJA';
-      else if (inasistenciaPorc >= 10) nivel = 'AMARILLO';
+      if (inasistenciaPorc >= umbralRojo) nivel = 'ROJO';
+      else if (inasistenciaPorc >= umbralNaranja) nivel = 'NARANJA';
+      else if (inasistenciaPorc >= umbralAmarillo) nivel = 'AMARILLO';
 
       await this.prisma.$executeRawUnsafe(`
-        INSERT INTO "${slug}".alertas_asistencia 
+        INSERT INTO "${slug}".alertas_asistencia
           (matricula_id, nivel_alerta, porcentaje_asistencia, faltas_injustificadas, tardanzas_acumuladas, ultima_actualizacion)
-        VALUES 
-          ('${row.matricula_id}', '${nivel}', ${porcentaje.toFixed(2)}, ${faltas}, ${tardanzas}, NOW())
+        VALUES
+          ('${row.matricula_id}', '${nivel}', ${Math.max(0, porcentaje).toFixed(2)}, ${faltasEfectivas}, ${tardanzas}, NOW())
         ON CONFLICT (matricula_id) DO UPDATE SET
           nivel_alerta = EXCLUDED.nivel_alerta,
           porcentaje_asistencia = EXCLUDED.porcentaje_asistencia,

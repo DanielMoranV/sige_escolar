@@ -31,12 +31,12 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          <tr v-if="!secciones.length">
+          <tr v-if="!seccionesFiltradas.length">
             <td colspan="8" class="px-6 py-10 text-center text-gray-500">
               No hay secciones registradas para el año escolar activo.
             </td>
           </tr>
-          <tr v-for="sec in secciones" :key="sec.id" class="hover:bg-gray-50 transition-colors">
+          <tr v-for="sec in seccionesFiltradas" :key="sec.id" class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
@@ -49,7 +49,8 @@
               </div>
             </td>
             <td class="px-6 py-4 hidden sm:table-cell">
-              <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="sec.nivel === 'PRIMARIA' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'">
+              <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                :class="sec.nivel === 'PRIMARIA' ? 'bg-blue-100 text-blue-700' : sec.nivel === 'INICIAL' ? 'bg-emerald-100 text-emerald-700' : 'bg-purple-100 text-purple-700'">
                 {{ sec.nivel }}
               </span>
             </td>
@@ -119,9 +120,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { PlusIcon, EditIcon, EyeIcon, EyeOffIcon } from 'lucide-vue-next';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useNivelStore } from '../../stores/nivel.store';
 import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
@@ -129,9 +131,15 @@ import BaseModal from '../../components/ui/BaseModal.vue';
 import BaseInput from '../../components/ui/BaseInput.vue';
 
 const toast = useToast();
+const nivelStore = useNivelStore();
 
 const isLoading = ref(true);
 const secciones = ref<any[]>([]);
+const seccionesFiltradas = computed(() =>
+  nivelStore.nivelActivo === 'TODOS'
+    ? secciones.value
+    : secciones.value.filter(s => s.nivel === nivelStore.nivelActivo)
+);
 const grados = ref<any[]>([]);
 const showModal = ref(false);
 const isSaving = ref(false);

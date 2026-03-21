@@ -85,10 +85,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { DownloadIcon, CalculatorIcon } from 'lucide-vue-next';
 import { cierreService } from '../../api/services/cierre.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useNivelStore } from '../../stores/nivel.store';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
@@ -96,9 +97,19 @@ import BaseBadge from '../../components/ui/BaseBadge.vue';
 import BaseModal from '../../components/ui/BaseModal.vue';
 import BaseInput from '../../components/ui/BaseInput.vue';
 
+const nivelStore = useNivelStore();
 const anioId = ref('');
 const filters = ref({ seccionId: '' });
-const seccionesOptions = ref<any[]>([]);
+const rawSecciones = ref<any[]>([]);
+const seccionesOptions = computed(() => {
+  const filtered = nivelStore.nivelActivo === 'TODOS'
+    ? rawSecciones.value
+    : rawSecciones.value.filter(s => s.nivel === nivelStore.nivelActivo);
+  return [
+    { label: 'Todas las secciones', value: '' },
+    ...filtered.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id })),
+  ];
+});
 const resultados = ref<any[]>([]);
 const isLoading = ref(false);
 const isCalculating = ref(false);
@@ -122,10 +133,7 @@ onMounted(async () => {
     const anio = await schoolConfigService.getAnioEscolar();
     anioId.value = anio.id;
     const s = await schoolConfigService.getSecciones();
-    seccionesOptions.value = [
-      { label: 'Todas las secciones', value: '' },
-      ...s.map((item: any) => ({ label: `${item.grado_nombre} - ${item.nombre}`, value: item.id }))
-    ];
+    rawSecciones.value = s;
     await loadResultados();
   } catch (error) {
     console.error(error);

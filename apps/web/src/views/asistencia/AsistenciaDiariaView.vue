@@ -55,6 +55,8 @@
           v-model="selectedFecha"
           type="date"
           label="Fecha"
+          :min="anioFechaInicio"
+          :max="anioFechaFin"
         />
         <div class="flex items-end pb-1">
           <div v-if="hasChanges" class="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 animate-pulse">
@@ -120,7 +122,24 @@
               @input="hasChanges = true"
             />
           </template>
+
+          <template #cell-acciones="{ row }">
+            <button
+              @click="abrirCalendario(row)"
+              class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Ver historial de asistencia"
+            >
+              <CalendarDaysIcon class="w-4 h-4" />
+            </button>
+          </template>
         </BaseTable>
+
+        <AsistenciaCalendarModal
+          :show="showCalendario"
+          :matricula-id="calendarioMatriculaId"
+          :student-name="calendarioNombre"
+          @close="showCalendario = false"
+        />
       </div>
 
       <div v-else class="bg-blue-50 border border-blue-100 rounded-2xl p-12 text-center space-y-4">
@@ -185,16 +204,18 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { SaveIcon, CheckCircleIcon, AlertCircleIcon, UsersIcon, RefreshCwIcon, ClipboardXIcon } from 'lucide-vue-next';
+import { SaveIcon, CheckCircleIcon, AlertCircleIcon, UsersIcon, RefreshCwIcon, ClipboardXIcon, CalendarDaysIcon } from 'lucide-vue-next';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
 import { useAuthStore } from '../../stores/auth.store';
+import { useNivelStore } from '../../stores/nivel.store';
 import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseInput from '../../components/ui/BaseInput.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
+import AsistenciaCalendarModal from '../../components/asistencia/AsistenciaCalendarModal.vue';
 
 const toast = useToast();
 const router = useRouter();
@@ -208,9 +229,21 @@ const tabs = [
 ];
 
 // --- Registro Diario ---
+const nivelStore = useNivelStore();
+const rawSecciones = ref<any[]>([]);
+const seccionesFiltradas = computed(() =>
+  nivelStore.nivelActivo === 'TODOS'
+    ? rawSecciones.value
+    : rawSecciones.value.filter(s => s.nivel === nivelStore.nivelActivo)
+);
+const seccionesOptions = computed(() =>
+  seccionesFiltradas.value.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id }))
+);
+
 const selectedSeccion = ref('');
 const selectedFecha = ref(new Date().toISOString().split('T')[0]);
-const seccionesOptions = ref<any[]>([]);
+const anioFechaInicio = ref('');
+const anioFechaFin = ref('');
 const asistenciaData = ref<any[]>([]);
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -222,6 +255,7 @@ const headers = [
   { key: 'estudiante', label: 'Estudiante' },
   { key: 'estado', label: 'Estado de Asistencia' },
   { key: 'observacion', label: 'Observación' },
+  { key: 'acciones', label: '', class: 'w-10' },
 ];
 
 const estadosAsistencia = [
@@ -231,6 +265,17 @@ const estadosAsistencia = [
   { value: 'FALTA_JUSTIFICADA', short: 'FJ', label: 'Falta Justificada', activeClass: 'bg-blue-500 text-white shadow-sm' },
   { value: 'LICENCIA', short: 'L', label: 'Licencia', activeClass: 'bg-purple-500 text-white shadow-sm' },
 ];
+
+// --- Calendario historial ---
+const showCalendario = ref(false);
+const calendarioMatriculaId = ref<string | null>(null);
+const calendarioNombre = ref('');
+
+function abrirCalendario(row: any) {
+  calendarioMatriculaId.value = row.matricula_id;
+  calendarioNombre.value = `${row.apellido_paterno} ${row.apellido_materno}, ${row.nombres}`;
+  showCalendario.value = true;
+}
 
 // --- Alertas ---
 const alertas = ref<any[]>([]);
@@ -245,13 +290,28 @@ const alertasColumns = [
 ];
 
 onMounted(async () => {
-  const secc = await schoolConfigService.getSecciones();
-  seccionesOptions.value = secc.map((s: any) => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id }));
+  const [secc, anio] = await Promise.all([
+    schoolConfigService.getSecciones(),
+    schoolConfigService.getAnioEscolar(),
+  ]);
+  rawSecciones.value = secc;
   if (secc.length > 0) selectedSeccion.value = secc[0].id;
+  if (anio) {
+    anioFechaInicio.value = anio.fecha_inicio.substring(0, 10);
+    anioFechaFin.value = anio.fecha_fin.substring(0, 10);
+    // Ajustar la fecha seleccionada si está fuera del rango
+    const hoy = new Date().toISOString().split('T')[0];
+    if (hoy < anioFechaInicio.value) selectedFecha.value = anioFechaInicio.value;
+    else if (hoy > anioFechaFin.value) selectedFecha.value = anioFechaFin.value;
+  }
 });
 
 watch(activeTab, (tab) => {
   if (tab === 'alertas' && !alertas.value.length) loadAlertas();
+});
+
+watch(() => nivelStore.nivelActivo, () => {
+  selectedSeccion.value = seccionesFiltradas.value[0]?.id ?? '';
 });
 
 watch([selectedSeccion, selectedFecha], () => {

@@ -41,19 +41,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { DownloadIcon, InfoIcon } from 'lucide-vue-next';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useNivelStore } from '../../stores/nivel.store';
 import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 
 const toast = useToast();
+const nivelStore = useNivelStore();
 
 const selectedMes = ref((new Date().getMonth() + 1).toString());
 const selectedSeccion = ref('');
-const seccionesOptions = ref<any[]>([]);
+const rawSecciones = ref<any[]>([]);
+const seccionesOptions = computed(() => {
+  const filtered = nivelStore.nivelActivo === 'TODOS'
+    ? rawSecciones.value
+    : rawSecciones.value.filter(s => s.nivel === nivelStore.nivelActivo);
+  return [
+    { label: 'Todas las secciones', value: '' },
+    ...filtered.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id })),
+  ];
+});
 const isExporting = ref(false);
 
 const meses = [
@@ -71,13 +82,7 @@ const meses = [
 
 onMounted(async () => {
   const secc = await schoolConfigService.getSecciones();
-  seccionesOptions.value = [
-    { label: 'Todas las secciones', value: '' },
-    ...secc.map((s: any) => ({
-      label: `${s.grado_nombre} - ${s.nombre}`,
-      value: s.id,
-    })),
-  ];
+  rawSecciones.value = secc;
 });
 
 async function handleExport() {

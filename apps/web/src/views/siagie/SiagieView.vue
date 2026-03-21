@@ -137,6 +137,7 @@ import { siagieService } from '../../api/services/siagie.service';
 import { notasService } from '../../api/services/notas.service';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { useNivelStore } from '../../stores/nivel.store';
 import { useToast } from '../../composables/useToast';
 import BaseTable from '../../components/ui/BaseTable.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
@@ -146,6 +147,7 @@ import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseInput from '../../components/ui/BaseInput.vue';
 
 const toast = useToast();
+const nivelStore = useNivelStore();
 
 const activeTab = ref('historial');
 const tabs = [
@@ -155,7 +157,16 @@ const tabs = [
 ];
 
 // --- Datos compartidos ---
-const seccionesOptions = ref<any[]>([]);
+const rawSecciones = ref<any[]>([]);
+const seccionesOptions = computed(() => {
+  const filtered = nivelStore.nivelActivo === 'TODOS'
+    ? rawSecciones.value
+    : rawSecciones.value.filter(s => s.nivel === nivelStore.nivelActivo);
+  return [
+    { label: 'Todas las secciones', value: '' },
+    ...filtered.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id })),
+  ];
+});
 const periodosOptions = ref<any[]>([]);
 const anioId = ref('');
 
@@ -167,10 +178,7 @@ onMounted(async () => {
       schoolConfigService.getPeriodos(),
     ]);
     anioId.value = anio.id;
-    seccionesOptions.value = [
-      { label: 'Todas las secciones', value: '' },
-      ...secc.map((s: any) => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id })),
-    ];
+    rawSecciones.value = secc;
     periodosOptions.value = per.map((p: any) => ({ label: p.nombre, value: p.id }));
     await loadLogs();
   } catch {

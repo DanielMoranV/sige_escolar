@@ -68,6 +68,58 @@ export class SchoolConfigController {
     return this.configService.updateSeccion(slug, id, body);
   }
 
+  @Get('areas/all')
+  @Roles('DIRECTOR')
+  async getAllAreas(@Headers('x-tenant-slug') slug: string) {
+    const anio = await this.configService.getAnioEscolar(slug);
+    return this.configService.getAllAreas(slug, anio.id);
+  }
+
+  @Post('areas')
+  @Roles('DIRECTOR')
+  async createArea(@Headers('x-tenant-slug') slug: string, @Body() body: any) {
+    const anio = await this.configService.getAnioEscolar(slug);
+    return this.configService.createArea(slug, anio.id, body);
+  }
+
+  @Patch('areas/:id')
+  @Roles('DIRECTOR')
+  async updateArea(@Headers('x-tenant-slug') slug: string, @Param('id') id: string, @Body() body: any) {
+    return this.configService.updateArea(slug, id, body);
+  }
+
+  @Get('areas/:id/competencias')
+  @Roles('DIRECTOR')
+  async getCompetencias(@Headers('x-tenant-slug') slug: string, @Param('id') id: string) {
+    return this.configService.getCompetencias(slug, id);
+  }
+
+  @Post('competencias')
+  @Roles('DIRECTOR')
+  async createCompetencia(@Headers('x-tenant-slug') slug: string, @Body() body: any) {
+    return this.configService.createCompetencia(slug, body.areaIeId, body);
+  }
+
+  @Patch('competencias/:id')
+  @Roles('DIRECTOR')
+  async updateCompetencia(@Headers('x-tenant-slug') slug: string, @Param('id') id: string, @Body() body: any) {
+    return this.configService.updateCompetencia(slug, id, body);
+  }
+
+  @Get('asistencia')
+  @Roles('DIRECTOR')
+  async getConfigAsistencia(@Headers('x-tenant-slug') slug: string) {
+    const anio = await this.configService.getAnioEscolar(slug);
+    return this.configService.getConfigAsistencia(slug, anio.id);
+  }
+
+  @Patch('asistencia')
+  @Roles('DIRECTOR')
+  async updateConfigAsistencia(@Headers('x-tenant-slug') slug: string, @Body() body: any) {
+    const anio = await this.configService.getAnioEscolar(slug);
+    return this.configService.updateConfigAsistencia(slug, anio.id, body);
+  }
+
   @Patch('tenant')
   @Roles('DIRECTOR')
   async updateTenant(@CurrentUser() user: any, @Body() data: any) {

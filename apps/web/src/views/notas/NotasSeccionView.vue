@@ -153,12 +153,14 @@ import { schoolConfigService } from '../../api/services/school-config.service';
 import { notasService } from '../../api/services/notas.service';
 import { useAuthStore } from '../../stores/auth.store';
 import { useToast } from '../../composables/useToast';
+import { useNivelStore } from '../../stores/nivel.store';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import CalificativoInput from '../../components/ui/CalificativoInput.vue';
 
 const toast = useToast();
 const authStore = useAuthStore();
+const nivelStore = useNivelStore();
 
 const isDirector = computed(() => authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN');
 const activeTab = ref('calificaciones');
@@ -185,9 +187,12 @@ const nivelActual = computed<'PRIMARIA' | 'SECUNDARIA'>(() => {
   return secc?.nivel || 'PRIMARIA';
 });
 
-const seccionesOptions = computed(() =>
-  todasSecciones.value.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id }))
-);
+const seccionesOptions = computed(() => {
+  const filtered = nivelStore.nivelActivo === 'TODOS'
+    ? todasSecciones.value
+    : todasSecciones.value.filter(s => s.nivel === nivelStore.nivelActivo);
+  return filtered.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id }));
+});
 
 const periodosOptions = computed(() =>
   todosPeriodos.value
