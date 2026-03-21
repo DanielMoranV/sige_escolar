@@ -102,6 +102,7 @@ import BasePagination from '../../components/ui/BasePagination.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
 import BaseModal from '../../components/ui/BaseModal.vue';
+import BaseInput from '../../components/ui/BaseInput.vue';
 
 const router = useRouter();
 const queryClient = useQueryClient();
