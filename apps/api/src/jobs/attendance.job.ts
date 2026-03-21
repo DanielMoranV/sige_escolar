@@ -21,7 +21,7 @@ export class AttendanceJob {
 
     for (const tenant of tenants) {
       try {
-        const slug = tenant.schemaName;
+        const slug = tenant.schema_name;
         
         // 2. Vencer justificaciones que pasaron el plazo
         const today = new Date().toISOString().split('T')[0];

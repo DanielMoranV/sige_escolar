@@ -8,10 +8,10 @@ import {
   Query,
   UseGuards,
   Headers,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { MatriculasService } from './matriculas.service';
 import { CreateMatriculaDto } from './dto/create-matricula.dto';
+import { FindAllMatriculasQueryDto } from './dto/find-all-matriculas-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -25,14 +25,10 @@ export class MatriculasController {
   @Get()
   findAll(
     @Headers('x-tenant-slug') slug: string,
-    @Query('anioEscolarId') anioEscolarId?: string,
-    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-    @Query('seccionId') seccionId?: string,
-    @Query('estado') estado?: string,
-    @Query('estudianteId') estudianteId?: string,
+    @Query() query: FindAllMatriculasQueryDto,
   ) {
-    return this.matriculasService.findAll(slug, anioEscolarId, page, limit, { seccionId, estado, estudianteId });
+    const { anioEscolarId, page, limit, ...filters } = query;
+    return this.matriculasService.findAll(slug, anioEscolarId, page, limit, filters);
   }
 
   @Get(':id')

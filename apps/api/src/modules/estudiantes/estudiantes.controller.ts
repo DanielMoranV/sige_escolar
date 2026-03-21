@@ -9,10 +9,10 @@ import {
   Query,
   UseGuards,
   Headers,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { EstudiantesService } from './estudiantes.service';
 import { CreateEstudianteDto } from './dto/create-estudiante.dto';
+import { FindAllEstudiantesQueryDto } from './dto/find-all-estudiantes-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -25,11 +25,9 @@ export class EstudiantesController {
   @Get()
   findAll(
     @Headers('x-tenant-slug') slug: string,
-    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-    @Query('search') search?: string,
+    @Query() query: FindAllEstudiantesQueryDto,
   ) {
-    return this.estudiantesService.findAll(slug, page, limit, search);
+    return this.estudiantesService.findAll(slug, query.page, query.limit, query.search);
   }
 
   @Get('validate-dni/:dni')
