@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body, UseGuards, Headers, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Headers, NotFoundException } from '@nestjs/common';
 import { SchoolConfigService } from './school-config.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -40,6 +40,32 @@ export class SchoolConfigController {
   async getSecciones(@Headers('x-tenant-slug') slug: string) {
     const anio = await this.configService.getAnioEscolar(slug);
     return this.configService.getSecciones(slug, anio.id);
+  }
+
+  @Get('secciones/all')
+  @Roles('DIRECTOR')
+  async getAllSecciones(@Headers('x-tenant-slug') slug: string) {
+    const anio = await this.configService.getAnioEscolar(slug);
+    return this.configService.getAllSecciones(slug, anio.id);
+  }
+
+  @Get('grados')
+  async getGrados(@Headers('x-tenant-slug') slug: string) {
+    if (!slug) throw new NotFoundException('Tenant no especificado');
+    return this.configService.getGrados(slug);
+  }
+
+  @Post('secciones')
+  @Roles('DIRECTOR')
+  async createSeccion(@Headers('x-tenant-slug') slug: string, @Body() body: any) {
+    const anio = await this.configService.getAnioEscolar(slug);
+    return this.configService.createSeccion(slug, anio.id, body);
+  }
+
+  @Patch('secciones/:id')
+  @Roles('DIRECTOR')
+  async updateSeccion(@Headers('x-tenant-slug') slug: string, @Param('id') id: string, @Body() body: any) {
+    return this.configService.updateSeccion(slug, id, body);
   }
 
   @Patch('tenant')

@@ -11,4 +11,10 @@ export const matriculasRoutes = [
     component: () => import('../../views/matriculas/MatriculaCreateView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: 'matriculas/:id',
+    name: 'matricula-detail',
+    component: () => import('../../views/matriculas/MatriculaDetailView.vue'),
+    meta: { requiresAuth: true },
+  },
 ];

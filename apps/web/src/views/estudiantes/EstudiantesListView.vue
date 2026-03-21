@@ -50,6 +50,10 @@
           </BaseBadge>
         </template>
 
+        <template #cell-fecha_nacimiento="{ row }">
+          {{ row.fecha_nacimiento ? new Date(row.fecha_nacimiento).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—' }}
+        </template>
+
         <template #cell-acciones="{ row }">
           <div class="flex items-center gap-2">
             <button @click="router.push(`/estudiantes/${row.id}`)" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Ver detalle">

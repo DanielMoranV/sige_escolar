@@ -2,11 +2,10 @@ import apiClient from '../client';
 
 export const estudiantesService = {
   async getEstudiantes(page: number = 1, limit: number = 20, search?: string) {
-    const response = await apiClient.get('estudiantes', {
+    const { data } = await apiClient.get('estudiantes', {
       params: { page, limit, search },
     });
-    // El interceptor ya devuelve { success, data, meta } en response.data
-    return response.data;
+    return data.data; // { data: [], meta: {} }
   },
   async getEstudiante(id: string) {
     const { data } = await apiClient.get(`estudiantes/${id}`);

@@ -39,6 +39,10 @@
           <span>{{ row.grado_nombre }} - {{ row.seccion_nombre }}</span>
         </template>
 
+        <template #cell-fecha_matricula="{ row }">
+          {{ row.fecha_matricula ? new Date(row.fecha_matricula).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—' }}
+        </template>
+
         <template #cell-estado="{ row }">
           <BaseBadge :variant="estadoVariant(row.estado)">
             {{ row.estado }}

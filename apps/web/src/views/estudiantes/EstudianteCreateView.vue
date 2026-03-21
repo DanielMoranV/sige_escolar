@@ -218,16 +218,40 @@ async function validateDni() {
   }
 }
 
+function validarFechaNacimiento(fecha: string): string | null {
+  if (!fecha) return 'La fecha de nacimiento es obligatoria.';
+
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return 'La fecha de nacimiento no es válida.';
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  if (d >= hoy) return 'La fecha de nacimiento no puede ser hoy ni una fecha futura.';
+
+  const anios = (hoy.getTime() - d.getTime()) / (365.25 * 24 * 3600 * 1000);
+  if (anios < 2) return 'La fecha indica menos de 2 años de edad. Verifique.';
+  if (anios > 25) return 'La fecha indica más de 25 años de edad. Verifique.';
+
+  return null;
+}
+
 function nextStep() {
   if (currentStep.value === 1) {
     if (!showManualForm.value) {
       toast.warning('Valide el DNI o use "Ingresar datos manualmente" para continuar');
       return;
     }
-    if (!form.value.nombres || !form.value.apellidoPaterno || !form.value.fechaNacimiento) {
-      toast.warning('Complete los campos obligatorios: nombres, apellido paterno y fecha de nacimiento');
+    if (!form.value.nombres || !form.value.apellidoPaterno) {
+      toast.warning('Complete los campos obligatorios: nombres y apellido paterno');
       return;
     }
+    const errorFecha = validarFechaNacimiento(form.value.fechaNacimiento);
+    if (errorFecha) {
+      errors.value.fechaNacimiento = errorFecha;
+      toast.warning(errorFecha);
+      return;
+    }
+    errors.value.fechaNacimiento = '';
     if (!form.value.genero) {
       toast.warning('Seleccione el género del estudiante');
       return;

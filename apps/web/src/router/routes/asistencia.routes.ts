@@ -7,14 +7,10 @@ export const asistenciaRoutes = [
   },
   {
     path: 'asistencia/alertas',
-    name: 'asistencia-alertas',
-    component: () => import('../../views/asistencia/AlertasView.vue'),
-    meta: { requiresAuth: true, roles: ['DIRECTOR'] },
+    redirect: '/asistencia',
   },
   {
     path: 'asistencia/exportar',
-    name: 'asistencia-exportar',
-    component: () => import('../../views/asistencia/AsistenciaExportView.vue'),
-    meta: { requiresAuth: true, roles: ['DIRECTOR'] },
+    redirect: '/siagie',
   },
 ];

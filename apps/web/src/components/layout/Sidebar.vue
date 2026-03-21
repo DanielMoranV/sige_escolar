@@ -8,10 +8,7 @@
   >
     <!-- Brand -->
     <div class="flex items-center justify-between px-4 py-4 border-b border-blue-800">
-      <span
-        v-if="!uiStore.sidebarCollapsed"
-        class="text-white font-bold text-lg truncate"
-      >SIGE</span>
+      <span v-if="!uiStore.sidebarCollapsed" class="text-white font-bold text-lg truncate">SIGE</span>
       <button
         @click="uiStore.toggleSidebar()"
         class="text-blue-200 hover:text-white p-1 rounded transition-colors ml-auto"
@@ -23,13 +20,19 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
-      <SidebarItem
-        v-for="item in menuItems"
-        :key="item.path"
-        :item="item"
-        :collapsed="uiStore.sidebarCollapsed"
-      />
+    <nav class="flex-1 py-4 px-2 overflow-y-auto space-y-0.5">
+      <template v-for="item in menuItems" :key="item.type === 'separator' ? item.label : item.path">
+        <!-- Separador de sección -->
+        <div v-if="item.type === 'separator'" class="pt-4 pb-1 px-2">
+          <span
+            v-if="!uiStore.sidebarCollapsed"
+            class="text-[10px] font-bold tracking-widest uppercase text-blue-400"
+          >{{ item.label }}</span>
+          <div v-else class="border-t border-blue-800 mt-1"></div>
+        </div>
+        <!-- Item de navegación -->
+        <SidebarItem v-else :item="item" :collapsed="uiStore.sidebarCollapsed" />
+      </template>
     </nav>
 
     <!-- User info + logout -->
@@ -39,7 +42,7 @@
         <p class="text-blue-300 text-xs">{{ formatRol(authStore.user?.rol) }}</p>
       </div>
       <button
-        @click="handleLogout"
+        @click="showLogoutModal = true"
         class="flex items-center gap-2 w-full px-2 py-2 rounded text-blue-200 hover:text-white hover:bg-blue-800 transition-colors"
         :title="uiStore.sidebarCollapsed ? 'Cerrar sesión' : undefined"
       >
@@ -48,63 +51,75 @@
       </button>
     </div>
   </aside>
+
+  <BaseModal :show="showLogoutModal" title="Cerrar sesión" @close="showLogoutModal = false">
+    <p class="text-sm text-gray-600">¿Está seguro de que desea cerrar la sesión?</p>
+    <template #footer>
+      <div class="flex justify-end gap-3">
+        <BaseButton variant="secondary" @click="showLogoutModal = false">Cancelar</BaseButton>
+        <BaseButton variant="danger" @click="handleLogout">Cerrar sesión</BaseButton>
+      </div>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import BaseModal from '../ui/BaseModal.vue';
+import BaseButton from '../ui/BaseButton.vue';
 import { useAuthStore } from '../../stores/auth.store';
 import { useUiStore } from '../../stores/ui.store';
 import SidebarItem from './SidebarItem.vue';
-import { 
-  ChevronLeftIcon, 
-  ChevronRightIcon, 
-  LogOutIcon, 
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  LogOutIcon,
   LayoutDashboardIcon,
   SettingsIcon,
   UsersIcon,
   UserPlusIcon,
-  CheckCircleIcon, 
-  AlertTriangleIcon,
-  DownloadIcon,
+  CheckCircleIcon,
   GraduationCapIcon,
   FileTextIcon,
   ArchiveIcon,
-  UploadCloudIcon
-  } from 'lucide-vue-next';
+  UploadCloudIcon,
+} from 'lucide-vue-next';
 
-  const authStore = useAuthStore();
-  const uiStore = useUiStore();
-  const router = useRouter();
+const authStore = useAuthStore();
+const uiStore = useUiStore();
+const router = useRouter();
+const showLogoutModal = ref(false);
 
-  const menuItems = computed(() => {
-    // Si es APODERADO, mostrar menú del portal
-    if (authStore.user?.rol === 'APODERADO') {
-      return [
-        { label: 'Mi Hijo', path: '/portal', icon: UsersIcon },
-        { label: 'Notas', path: '/portal/notas', icon: GraduationCapIcon },
-        { label: 'Libretas', path: '/portal/libretas', icon: FileTextIcon },
-      ];
-    }
-
-    const items = [
-      { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
-      { label: 'Estudiantes', path: '/estudiantes', icon: UsersIcon },
-      { label: 'Matrículas', path: '/matriculas', icon: UserPlusIcon },
-      { label: 'Asistencia', path: '/asistencia', icon: CheckCircleIcon },
-      { label: 'Notas', path: '/notas', icon: GraduationCapIcon },
-      { label: 'Reportes', path: '/reportes', icon: FileTextIcon },
+const menuItems = computed(() => {
+  if (authStore.user?.rol === 'APODERADO') {
+    return [
+      { label: 'Mi Hijo', path: '/portal', icon: UsersIcon },
+      { label: 'Notas', path: '/portal/notas', icon: GraduationCapIcon },
+      { label: 'Libretas', path: '/portal/libretas', icon: FileTextIcon },
     ];
-    if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
-      items.push({ label: 'Cierre de Año', path: '/cierre', icon: ArchiveIcon });
-      items.push({ label: 'Panel SIAGIE', path: '/siagie', icon: UploadCloudIcon });
-      items.push({ label: 'Alertas', path: '/asistencia/alertas', icon: AlertTriangleIcon });
-      items.push({ label: 'Exportar SIAGIE', path: '/asistencia/exportar', icon: DownloadIcon });
-      items.push({ label: 'Exportar Notas', path: '/notas/exportar', icon: DownloadIcon });
-      items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
-    }
-    return items;
-  });
+  }
+
+  const items: any[] = [
+    { type: 'separator', label: 'General' },
+    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
+    { label: 'Estudiantes', path: '/estudiantes', icon: UsersIcon },
+    { label: 'Matrículas', path: '/matriculas', icon: UserPlusIcon },
+    { type: 'separator', label: 'Académico' },
+    { label: 'Asistencia', path: '/asistencia', icon: CheckCircleIcon },
+    { label: 'Notas', path: '/notas', icon: GraduationCapIcon },
+    { label: 'Reportes', path: '/reportes', icon: FileTextIcon },
+  ];
+
+  if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
+    items.push({ type: 'separator', label: 'Dirección' });
+    items.push({ label: 'SIAGIE', path: '/siagie', icon: UploadCloudIcon });
+    items.push({ label: 'Cierre de Año', path: '/cierre', icon: ArchiveIcon });
+    items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
+  }
+
+  return items;
+});
 
 function formatRol(rol?: string): string {
   const mapa: Record<string, string> = {
@@ -121,6 +136,7 @@ function formatRol(rol?: string): string {
 }
 
 async function handleLogout() {
+  showLogoutModal.value = false;
   await authStore.logout();
   router.push('/login');
 }

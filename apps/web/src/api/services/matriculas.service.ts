@@ -8,7 +8,7 @@ export const matriculasService = {
     const { data } = await apiClient.get('matriculas', {
       params: { anioEscolarId, page, limit, ...cleanFilters },
     });
-    return data;
+    return data.data; // { data: [], meta: { total, totalPages, ... } }
   },
   async getMatricula(id: string) {
     const { data } = await apiClient.get(`matriculas/${id}`);
