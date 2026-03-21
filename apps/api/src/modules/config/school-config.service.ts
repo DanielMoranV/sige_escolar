@@ -36,6 +36,16 @@ export class SchoolConfigService {
     );
   }
 
+  async getSecciones(slug: string, anioEscolarId: string) {
+    return this.prisma.$queryRawUnsafe<any[]>(
+      `SELECT s.*, g.nombre as grado_nombre, g.nivel 
+       FROM "${slug}".secciones s
+       JOIN "${slug}".grados g ON s.grado_id = g.id
+       WHERE s.anio_escolar_id = '${anioEscolarId}' AND s.activa = true
+       ORDER BY g.orden, s.nombre`
+    );
+  }
+
   async updateTenant(id: string, data: any) {
     return this.prisma.tenant.update({
       where: { id },

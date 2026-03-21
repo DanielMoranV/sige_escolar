@@ -6,6 +6,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { SchoolConfigModule } from './modules/config/school-config.module';
 import { EstudiantesModule } from './modules/estudiantes/estudiantes.module';
 import { MatriculasModule } from './modules/matriculas/matriculas.module';
+import { AsistenciaModule } from './modules/asistencia/asistencia.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MatriculasModule } from './modules/matriculas/matriculas.module';
     SchoolConfigModule,
     EstudiantesModule,
     MatriculasModule,
+    AsistenciaModule,
   ],
 })
 export class AppModule {}

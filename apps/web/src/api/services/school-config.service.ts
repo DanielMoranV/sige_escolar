@@ -17,6 +17,10 @@ export const schoolConfigService = {
     const { data } = await apiClient.get('/config/areas');
     return data.data;
   },
+  async getSecciones() {
+    const { data } = await apiClient.get('/config/secciones');
+    return data.data;
+  },
   async updateTenant(payload: any) {
     const { data } = await apiClient.patch('/config/tenant', payload);
     return data.data;

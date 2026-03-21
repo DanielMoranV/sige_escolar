@@ -58,7 +58,9 @@ import {
   ChevronRightIcon, 
   LogOutIcon, 
   LayoutDashboardIcon,
-  SettingsIcon
+  SettingsIcon,
+  UsersIcon,
+  UserPlusIcon
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
@@ -68,6 +70,8 @@ const router = useRouter();
 const menuItems = computed(() => {
   const items = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
+    { label: 'Estudiantes', path: '/estudiantes', icon: UsersIcon },
+    { label: 'Matrículas', path: '/matriculas', icon: UserPlusIcon },
   ];
 
   if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {

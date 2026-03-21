@@ -3,6 +3,8 @@ import { useAuthStore } from '../stores/auth.store';
 import { authRoutes } from './routes/auth.routes';
 import { dashboardRoutes } from './routes/dashboard.routes';
 import { configRoutes } from './routes/config.routes';
+import { estudiantesRoutes } from './routes/estudiantes.routes';
+import { matriculasRoutes } from './routes/matriculas.routes';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -10,6 +12,8 @@ const router = createRouter({
     ...authRoutes,
     ...dashboardRoutes,
     ...configRoutes,
+    ...estudiantesRoutes,
+    ...matriculasRoutes,
     { path: '/', redirect: '/dashboard' },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
   ],

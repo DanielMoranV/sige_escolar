@@ -36,6 +36,12 @@ export class SchoolConfigController {
     return this.configService.getAreas(slug, anio.id);
   }
 
+  @Get('secciones')
+  async getSecciones(@Headers('x-tenant-slug') slug: string) {
+    const anio = await this.configService.getAnioEscolar(slug);
+    return this.configService.getSecciones(slug, anio.id);
+  }
+
   @Patch('tenant')
   @Roles('DIRECTOR')
   async updateTenant(@CurrentUser() user: any, @Body() data: any) {
