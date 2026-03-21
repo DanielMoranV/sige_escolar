@@ -84,6 +84,7 @@ import {
   if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
     items.push({ label: 'Alertas', path: '/asistencia/alertas', icon: AlertTriangleIcon });
     items.push({ label: 'Exportar SIAGIE', path: '/asistencia/exportar', icon: DownloadIcon });
+    items.push({ label: 'Exportar Notas', path: '/notas/exportar', icon: DownloadIcon });
     items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
   }
 

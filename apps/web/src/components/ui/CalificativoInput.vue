@@ -44,13 +44,13 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:literal', 'update:numerico', 'change']);
 
-const literalValue = ref(props.literal);
-const numericValue = ref(props.numerico);
+const literalValue = ref<string | null>(props.literal ?? null);
+const numericValue = ref<number | null>(props.numerico ?? null);
 
 const literalOptions = ['AD', 'A', 'B', 'C'];
 
-watch(() => props.literal, (val) => literalValue.value = val);
-watch(() => props.numerico, (val) => numericValue.value = val);
+watch(() => props.literal, (val) => literalValue.value = val ?? null);
+watch(() => props.numerico, (val) => numericValue.value = val ?? null);
 
 function updateLiteral(val: string) {
   const newValue = literalValue.value === val ? null : val;
@@ -60,7 +60,7 @@ function updateLiteral(val: string) {
 }
 
 function emitNumeric() {
-  if (numericValue.value !== null) {
+  if (numericValue.value !== null && numericValue.value !== undefined) {
     if (numericValue.value < 0) numericValue.value = 0;
     if (numericValue.value > 20) numericValue.value = 20;
   }
