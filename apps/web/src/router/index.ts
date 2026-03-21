@@ -5,6 +5,8 @@ import { dashboardRoutes } from './routes/dashboard.routes';
 import { configRoutes } from './routes/config.routes';
 import { estudiantesRoutes } from './routes/estudiantes.routes';
 import { matriculasRoutes } from './routes/matriculas.routes';
+import { asistenciaRoutes } from './routes/asistencia.routes';
+import { notasRoutes } from './routes/notas.routes';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +16,8 @@ const router = createRouter({
     ...configRoutes,
     ...estudiantesRoutes,
     ...matriculasRoutes,
+    ...asistenciaRoutes,
+    ...notasRoutes,
     { path: '/', redirect: '/dashboard' },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
   ],
@@ -38,7 +42,8 @@ router.beforeEach((to, _from, next) => {
   }
 
   // Verificar roles si existen en meta
-  if (to.meta.roles && !to.meta.roles.includes(auth.user?.rol)) {
+  const roles = to.meta.roles as string[] | undefined;
+  if (roles && !roles.includes(auth.user?.rol || '')) {
     return next('/dashboard');
   }
 

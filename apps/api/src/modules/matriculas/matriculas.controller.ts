@@ -25,13 +25,14 @@ export class MatriculasController {
   @Get()
   findAll(
     @Headers('x-tenant-slug') slug: string,
-    @Query('anioEscolarId') anioEscolarId: string,
+    @Query('anioEscolarId') anioEscolarId?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('seccionId') seccionId?: string,
     @Query('estado') estado?: string,
+    @Query('estudianteId') estudianteId?: string,
   ) {
-    return this.matriculasService.findAll(slug, anioEscolarId, page, limit, { seccionId, estado });
+    return this.matriculasService.findAll(slug, anioEscolarId, page, limit, { seccionId, estado, estudianteId });
   }
 
   @Get(':id')

@@ -11,4 +11,10 @@ export const estudiantesRoutes = [
     component: () => import('../../views/estudiantes/EstudianteCreateView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/estudiantes/:id',
+    name: 'estudiante-detail',
+    component: () => import('../../views/estudiantes/EstudianteDetailView.vue'),
+    meta: { requiresAuth: true },
+  },
 ];

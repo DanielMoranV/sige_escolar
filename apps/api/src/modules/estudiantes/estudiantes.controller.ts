@@ -42,6 +42,11 @@ export class EstudiantesController {
     return this.estudiantesService.findOne(slug, id);
   }
 
+  @Get(':id/apoderados')
+  findApoderados(@Headers('x-tenant-slug') slug: string, @Param('id') id: string) {
+    return this.estudiantesService.findApoderados(slug, id);
+  }
+
   @Post()
   @Roles('DIRECTOR', 'SECRETARIA')
   create(@Headers('x-tenant-slug') slug: string, @Body() createEstudianteDto: CreateEstudianteDto) {

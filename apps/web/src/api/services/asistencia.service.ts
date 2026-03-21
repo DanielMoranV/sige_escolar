@@ -21,4 +21,12 @@ export const asistenciaService = {
     const { data } = await apiClient.get('/asistencia/alertas');
     return data.data;
   },
+  async calcularAlertas(anioEscolarId: string) {
+    const { data } = await apiClient.post('/asistencia/calcular-alertas', { anioEscolarId });
+    return data.data;
+  },
+  async exportSiagie(params: { mes: number; anioEscolarId: string; seccionId?: string }) {
+    const { data } = await apiClient.get('/asistencia/export/siagie', { params });
+    return data.data;
+  },
 };

@@ -8,15 +8,21 @@ export class MatriculasService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(slug: string, anioEscolarId: string, page: number = 1, limit: number = 20, filters?: any) {
+  async findAll(slug: string, anioEscolarId?: string, page: number = 1, limit: number = 20, filters?: any) {
     const skip = (page - 1) * limit;
-    let whereClause = `WHERE m.anio_escolar_id = '${anioEscolarId}'`;
+    let whereClause = `WHERE 1=1`;
     
+    if (anioEscolarId) {
+      whereClause += ` AND m.anio_escolar_id = '${anioEscolarId}'`;
+    }
     if (filters?.seccionId) {
       whereClause += ` AND m.seccion_id = '${filters.seccionId}'`;
     }
     if (filters?.estado) {
       whereClause += ` AND m.estado = '${filters.estado}'`;
+    }
+    if (filters?.estudianteId) {
+      whereClause += ` AND m.estudiante_id = '${filters.estudianteId}'`;
     }
 
     const query = `
@@ -104,7 +110,7 @@ export class MatriculasService {
   }
 
   async update(slug: string, id: string, dto: any) {
-    const updates = [];
+    const updates: string[] = [];
     if (dto.seccionId) updates.push(`seccion_id = '${dto.seccionId}'`);
     if (dto.tipoMatricula) updates.push(`tipo_matricula = '${dto.tipoMatricula}'`);
     if (dto.condicionMatricula) updates.push(`condicion_matricula = '${dto.condicionMatricula}'`);

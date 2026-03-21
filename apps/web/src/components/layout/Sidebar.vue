@@ -53,6 +53,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth.store';
+import { useUiStore } from '../../stores/ui.store';
 import { 
   ChevronLeftIcon, 
   ChevronRightIcon, 
@@ -60,21 +62,28 @@ import {
   LayoutDashboardIcon,
   SettingsIcon,
   UsersIcon,
-  UserPlusIcon
-} from 'lucide-vue-next';
+  UserPlusIcon,
+  CheckCircleIcon, 
+  AlertTriangleIcon,
+  DownloadIcon,
+  GraduationCapIcon
+  } from 'lucide-vue-next';
 
-const authStore = useAuthStore();
-const uiStore = useUiStore();
-const router = useRouter();
+  const authStore = useAuthStore();
+  const uiStore = useUiStore();
+  const router = useRouter();
 
-const menuItems = computed(() => {
+  const menuItems = computed(() => {
   const items = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
     { label: 'Estudiantes', path: '/estudiantes', icon: UsersIcon },
     { label: 'Matrículas', path: '/matriculas', icon: UserPlusIcon },
+    { label: 'Asistencia', path: '/asistencia', icon: CheckCircleIcon },
+    { label: 'Notas', path: '/notas', icon: GraduationCapIcon },
   ];
-
   if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
+    items.push({ label: 'Alertas', path: '/asistencia/alertas', icon: AlertTriangleIcon });
+    items.push({ label: 'Exportar SIAGIE', path: '/asistencia/exportar', icon: DownloadIcon });
     items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
   }
 

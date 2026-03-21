@@ -13,7 +13,7 @@
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       <!-- Stepper simple -->
       <div class="flex border-b border-gray-100">
-        <div v-for="step in 2" :key="step" class="flex-1 py-3 text-center text-sm font-medium" :class="currentStep === step ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400'">
+        <div v-for="step in 3" :key="step" class="flex-1 py-3 text-center text-sm font-medium" :class="currentStep === step ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400'">
           Paso {{ step }}
         </div>
       </div>
@@ -80,6 +80,11 @@
           </div>
         </div>
 
+        <!-- Paso 3: Apoderado -->
+        <div v-if="currentStep === 3" class="space-y-6">
+          <ComponenteApoderado v-model="apoderado" />
+        </div>
+
         <!-- Navegación -->
         <div class="flex justify-between mt-8 pt-6 border-t border-gray-100">
           <BaseButton v-if="currentStep > 1" variant="secondary" @click="currentStep--">
@@ -87,7 +92,7 @@
           </BaseButton>
           <div v-else />
           
-          <BaseButton v-if="currentStep < 2" @click="nextStep">
+          <BaseButton v-if="currentStep < 3" @click="nextStep">
             Siguiente
             <ArrowRightIcon class="w-4 h-4" />
           </BaseButton>
@@ -114,12 +119,16 @@ import { estudiantesService } from '../../api/services/estudiantes.service';
 import BaseInput from '../../components/ui/BaseInput.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
 import BaseButton from '../../components/ui/BaseButton.vue';
+import ComponenteApoderado from '../../components/ui/ComponenteApoderado.vue';
+import apiClient from '../../api/client';
 
 const router = useRouter();
 const currentStep = ref(1);
 const isValidating = ref(false);
 const isSubmitting = ref(false);
 const showManualForm = ref(false);
+
+const apoderado = ref<any>({});
 
 const form = ref({
   dni: '',
@@ -175,20 +184,22 @@ function nextStep() {
   currentStep.value++;
 }
 
-const createMutation = useMutation({
-  mutationFn: (payload: any) => estudiantesService.createEstudiante(payload),
-  onSuccess: () => {
-    router.push('/estudiantes');
-  }
-});
-
 async function submit() {
   isSubmitting.value = true;
   try {
-    await createMutation.mutateAsync({
+    const estudiante = await estudiantesService.createEstudiante({
       ...form.value,
       numeroDocumento: form.value.dni || form.value.numeroDocumento
     });
+
+    if (apoderado.value && apoderado.value.numeroDocumento) {
+      await apiClient.post('/apoderados', {
+        ...apoderado.value,
+        estudianteId: estudiante.id
+      });
+    }
+
+    router.push('/estudiantes');
   } catch (err: any) {
     alert(err?.response?.data?.message || 'Error al registrar estudiante');
   } finally {

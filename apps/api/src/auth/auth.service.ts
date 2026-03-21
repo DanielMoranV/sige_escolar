@@ -14,6 +14,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.prisma.usuario.findFirst({
       where: { email: dto.email, activo: true, deleted_at: null },
+      include: { tenant: true },
     });
 
     if (!user) throw new UnauthorizedException('Credenciales incorrectas');
@@ -50,6 +51,7 @@ export class AuthService {
         apellidos: user.apellidos,
         rol: user.rol,
         tenantId: user.tenant_id,
+        tenantName: user.tenant?.nombre,
         needsPasswordChange: user.needs_password_change,
       },
     };
@@ -109,11 +111,20 @@ export class AuthService {
   async me(userId: string) {
     const user = await this.prisma.usuario.findUnique({
       where: { id: userId },
-      select: {
-        id: true, email: true, nombres: true, apellidos: true,
-        rol: true, tenant_id: true, activo: true, ultimo_acceso: true,
-      },
+      include: { tenant: true },
     });
-    return user;
+    if (!user) return null;
+    
+    return {
+      id: user.id,
+      email: user.email,
+      nombres: user.nombres,
+      apellidos: user.apellidos,
+      rol: user.rol,
+      tenantId: user.tenant_id,
+      tenantName: user.tenant?.nombre,
+      activo: user.activo,
+      ultimo_acceso: user.ultimo_acceso,
+    };
   }
 }

@@ -55,25 +55,25 @@
 
       <BaseTable
         v-else
-        :headers="headers"
-        :items="asistenciaData"
+        :columns="headers"
+        :data="asistenciaData"
       >
-        <template #item-estudiante="{ item }">
+        <template #cell-estudiante="{ row }">
           <div class="flex flex-col">
-            <span class="font-medium text-gray-900">{{ item.apellido_paterno }} {{ item.apellido_materno }}, {{ item.nombres }}</span>
-            <span class="text-xs text-gray-500">{{ item.dni }}</span>
+            <span class="font-medium text-gray-900">{{ row.apellido_paterno }} {{ row.apellido_materno }}, {{ row.nombres }}</span>
+            <span class="text-xs text-gray-500">{{ row.dni }}</span>
           </div>
         </template>
 
-        <template #item-estado="{ item }">
+        <template #cell-estado="{ row }">
           <div class="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-100 w-fit">
             <button
               v-for="opt in estadosAsistencia"
               :key="opt.value"
-              @click="setEstado(item, opt.value)"
+              @click="setEstado(row, opt.value)"
               class="px-3 py-1.5 rounded-md text-xs font-bold transition-all"
               :class="[
-                item.estado === opt.value 
+                row.estado === opt.value 
                   ? opt.activeClass 
                   : 'text-gray-400 hover:text-gray-600 hover:bg-white'
               ]"
@@ -84,9 +84,9 @@
           </div>
         </template>
 
-        <template #item-observacion="{ item }">
+        <template #cell-observacion="{ row }">
           <input
-            v-model="item.observacion"
+            v-model="row.observacion"
             type="text"
             placeholder="Nota opcional..."
             class="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-600"

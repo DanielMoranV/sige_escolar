@@ -24,33 +24,33 @@
     <!-- Tabla -->
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <BaseTable
-        :headers="headers"
-        :items="data?.data || []"
+        :columns="headers"
+        :data="data?.data || []"
         :loading="isLoading"
       >
-        <template #item-estudiante="{ item }">
+        <template #cell-estudiante="{ row }">
           <div class="flex flex-col">
-            <span class="font-medium text-gray-900">{{ item.apellido_paterno }} {{ item.apellido_materno }}, {{ item.nombres }}</span>
-            <span class="text-xs text-gray-500">{{ item.dni }}</span>
+            <span class="font-medium text-gray-900">{{ row.apellido_paterno }} {{ row.apellido_materno }}, {{ row.nombres }}</span>
+            <span class="text-xs text-gray-500">{{ row.dni }}</span>
           </div>
         </template>
 
-        <template #item-grado_seccion="{ item }">
-          <span>{{ item.grado_nombre }} - {{ item.seccion_nombre }}</span>
+        <template #cell-grado_seccion="{ row }">
+          <span>{{ row.grado_nombre }} - {{ row.seccion_nombre }}</span>
         </template>
 
-        <template #item-estado="{ item }">
-          <BaseBadge :variant="estadoVariant(item.estado)">
-            {{ item.estado }}
+        <template #cell-estado="{ row }">
+          <BaseBadge :variant="estadoVariant(row.estado)">
+            {{ row.estado }}
           </BaseBadge>
         </template>
 
-        <template #item-acciones="{ item }">
+        <template #cell-acciones="{ row }">
           <div class="flex items-center gap-2">
-            <button @click="router.push(`/matriculas/${item.id}`)" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Detalle">
+            <button @click="router.push(`/matriculas/${row.id}`)" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Detalle">
               <EyeIcon class="w-4 h-4" />
             </button>
-            <button v-if="item.estado === 'ACTIVA'" @click="confirmRetiro(item)" class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Retirar Estudiante">
+            <button v-if="row.estado === 'ACTIVA'" @click="confirmRetiro(row)" class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Retirar Estudiante">
               <UserMinusIcon class="w-4 h-4" />
             </button>
           </div>
@@ -59,9 +59,10 @@
 
       <div class="px-6 py-4 border-t border-gray-100">
         <BasePagination
-          v-model:page="page"
-          :total-items="data?.meta?.total || 0"
-          :limit="limit"
+          :currentPage="page"
+          :totalPages="data?.meta?.totalPages || 1"
+          :total="data?.meta?.total || 0"
+          @page-change="page = $event"
         />
       </div>
     </div>
@@ -157,9 +158,9 @@ const { data, isLoading } = useQuery({
 });
 
 function estadoVariant(estado: string) {
-  if (estado === 'ACTIVA') return 'primary';
+  if (estado === 'ACTIVA') return 'success';
   if (estado === 'RETIRADA') return 'danger';
-  return 'secondary';
+  return 'neutral';
 }
 
 // Lógica de Retiro

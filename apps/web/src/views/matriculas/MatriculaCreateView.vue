@@ -50,7 +50,7 @@
                 <p class="text-xs text-blue-700">DNI: {{ estudianteEncontrado.dni }}</p>
               </div>
             </div>
-            <BaseBadge variant="primary">Seleccionado</BaseBadge>
+            <BaseBadge variant="info">Seleccionado</BaseBadge>
           </div>
 
           <div v-else-if="searchAttempted" class="text-center py-8">

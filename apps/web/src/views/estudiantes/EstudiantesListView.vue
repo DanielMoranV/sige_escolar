@@ -32,37 +32,37 @@
     <!-- Tabla -->
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <BaseTable
-        :headers="headers"
-        :items="data?.data || []"
+        :columns="headers"
+        :data="data?.data || []"
         :loading="isLoading"
       >
-        <template #item-nombre="{ item }">
+        <template #cell-nombre="{ row }">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
-              {{ item.nombres[0] }}{{ item.apellido_paterno[0] }}
+              {{ row.nombres[0] }}{{ row.apellido_paterno[0] }}
             </div>
             <div>
-              <p class="font-medium text-gray-900">{{ item.apellido_paterno }} {{ item.apellido_materno }}, {{ item.nombres }}</p>
-              <p class="text-xs text-gray-500">{{ item.dni }}</p>
+              <p class="font-medium text-gray-900">{{ row.apellido_paterno }} {{ row.apellido_materno }}, {{ row.nombres }}</p>
+              <p class="text-xs text-gray-500">{{ row.dni }}</p>
             </div>
           </div>
         </template>
 
-        <template #item-genero="{ item }">
-          <BaseBadge :variant="item.genero === 'M' ? 'primary' : 'secondary'">
-            {{ item.genero === 'M' ? 'Masculino' : 'Femenino' }}
+        <template #cell-genero="{ row }">
+          <BaseBadge :variant="row.genero === 'M' ? 'info' : 'neutral'">
+            {{ row.genero === 'M' ? 'Masculino' : 'Femenino' }}
           </BaseBadge>
         </template>
 
-        <template #item-acciones="{ item }">
+        <template #cell-acciones="{ row }">
           <div class="flex items-center gap-2">
-            <button @click="router.push(`/estudiantes/${item.id}`)" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Ver detalle">
+            <button @click="router.push(`/estudiantes/${row.id}`)" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Ver detalle">
               <EyeIcon class="w-4 h-4" />
             </button>
-            <button @click="router.push(`/estudiantes/${item.id}/editar`)" class="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Editar">
+            <button @click="router.push(`/estudiantes/${row.id}/editar`)" class="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Editar">
               <EditIcon class="w-4 h-4" />
             </button>
-            <button @click="confirmDelete(item)" class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
+            <button @click="confirmDelete(row)" class="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Eliminar">
               <TrashIcon class="w-4 h-4" />
             </button>
           </div>
@@ -71,9 +71,10 @@
 
       <div class="px-6 py-4 border-t border-gray-100">
         <BasePagination
-          v-model:page="page"
-          :total-items="data?.meta?.total || 0"
-          :limit="limit"
+          :currentPage="page"
+          :totalPages="data?.meta?.totalPages || 1"
+          :total="data?.meta?.total || 0"
+          @page-change="page = $event"
         />
       </div>
     </div>

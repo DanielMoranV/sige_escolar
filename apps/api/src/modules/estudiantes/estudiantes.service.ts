@@ -47,6 +47,15 @@ export class EstudiantesService {
     return result[0];
   }
 
+  async findApoderados(slug: string, estudianteId: string) {
+    return this.prisma.$queryRawUnsafe<any[]>(
+      `SELECT a.*, ea.parentesco, ea.es_apoderado_principal, ea.vive_con_estudiante 
+       FROM "${slug}".apoderados a
+       JOIN "${slug}".estudiante_apoderado ea ON a.id = ea.apoderado_id
+       WHERE ea.estudiante_id = '${estudianteId}' AND a.activo = true`
+    );
+  }
+
   async create(slug: string, dto: CreateEstudianteDto) {
     // Verificar si ya existe un estudiante con el mismo DNI o número de documento
     if (dto.dni || dto.numeroDocumento) {
@@ -98,7 +107,7 @@ export class EstudiantesService {
   async update(slug: string, id: string, dto: any) {
     await this.findOne(slug, id);
 
-    const updates = [];
+    const updates: string[] = [];
     if (dto.apellidoPaterno) updates.push(`apellido_paterno = '${dto.apellidoPaterno}'`);
     if (dto.apellidoMaterno) updates.push(`apellido_materno = '${dto.apellidoMaterno}'`);
     if (dto.nombres) updates.push(`nombres = '${dto.nombres}'`);

@@ -68,4 +68,24 @@ export class AsistenciaController {
   getAlertas(@Headers('x-tenant-slug') slug: string) {
     return this.asistenciaService.getAlertas(slug);
   }
+
+  @Post('calcular-alertas')
+  @Roles('DIRECTOR')
+  calcularAlertas(
+    @Headers('x-tenant-slug') slug: string,
+    @Body('anioEscolarId') anioEscolarId: string,
+  ) {
+    return this.asistenciaService.calcularAlertas(slug, anioEscolarId);
+  }
+
+  @Get('export/siagie')
+  @Roles('DIRECTOR')
+  exportarSiagie(
+    @Headers('x-tenant-slug') slug: string,
+    @Query('mes') mes: number,
+    @Query('anioEscolarId') anioEscolarId: string,
+    @Query('seccionId') seccionId?: string,
+  ) {
+    return this.asistenciaService.exportarSiagie(slug, mes, anioEscolarId, seccionId);
+  }
 }
