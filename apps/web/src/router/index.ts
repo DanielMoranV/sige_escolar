@@ -7,6 +7,9 @@ import { estudiantesRoutes } from './routes/estudiantes.routes';
 import { matriculasRoutes } from './routes/matriculas.routes';
 import { asistenciaRoutes } from './routes/asistencia.routes';
 import { notasRoutes } from './routes/notas.routes';
+import { reportesRoutes } from './routes/reportes.routes';
+import { cierreRoutes } from './routes/cierre.routes';
+import { siagieRoutes } from './routes/siagie.routes';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -18,6 +21,9 @@ const router = createRouter({
     ...matriculasRoutes,
     ...asistenciaRoutes,
     ...notasRoutes,
+    ...reportesRoutes,
+    ...cierreRoutes,
+    ...siagieRoutes,
     { path: '/', redirect: '/dashboard' },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
   ],

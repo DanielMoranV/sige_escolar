@@ -66,7 +66,10 @@ import {
   CheckCircleIcon, 
   AlertTriangleIcon,
   DownloadIcon,
-  GraduationCapIcon
+  GraduationCapIcon,
+  FileTextIcon,
+  ArchiveIcon,
+  UploadCloudIcon
   } from 'lucide-vue-next';
 
   const authStore = useAuthStore();
@@ -80,14 +83,16 @@ import {
     { label: 'Matrículas', path: '/matriculas', icon: UserPlusIcon },
     { label: 'Asistencia', path: '/asistencia', icon: CheckCircleIcon },
     { label: 'Notas', path: '/notas', icon: GraduationCapIcon },
+    { label: 'Reportes', path: '/reportes', icon: FileTextIcon },
   ];
   if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
+    items.push({ label: 'Cierre de Año', path: '/cierre', icon: ArchiveIcon });
+    items.push({ label: 'Panel SIAGIE', path: '/siagie', icon: UploadCloudIcon });
     items.push({ label: 'Alertas', path: '/asistencia/alertas', icon: AlertTriangleIcon });
     items.push({ label: 'Exportar SIAGIE', path: '/asistencia/exportar', icon: DownloadIcon });
     items.push({ label: 'Exportar Notas', path: '/notas/exportar', icon: DownloadIcon });
     items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
   }
-
   return items;
 });
 

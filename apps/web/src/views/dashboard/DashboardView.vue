@@ -11,13 +11,14 @@
     </div>
     
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div v-for="card in statCards" :key="card.label" class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <p class="text-sm text-gray-500 font-medium">{{ card.label }}</p>
-          <component :is="card.icon" class="w-4 h-4 text-gray-400" />
-        </div>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ card.value }}</p>
-      </div>
+      <StatCard
+        v-for="card in statCards"
+        :key="card.label"
+        :title="card.label"
+        :value="card.value"
+        :icon="card.icon"
+        :color="card.color"
+      />
     </div>
   </div>
 </template>
@@ -27,6 +28,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '../../stores/auth.store';
 import { dashboardService } from '../../api/services/dashboard.service';
 import { UsersIcon, LayoutGridIcon, CheckCircleIcon, AlertCircleIcon } from 'lucide-vue-next';
+import StatCard from '../../components/ui/StatCard.vue';
 
 const authStore = useAuthStore();
 const loading = ref(true);
@@ -38,10 +40,10 @@ const stats = ref({
 });
 
 const statCards = computed(() => [
-  { label: 'Estudiantes', value: stats.value.totalEstudiantes, icon: UsersIcon },
-  { label: 'Secciones', value: stats.value.totalSecciones, icon: LayoutGridIcon },
-  { label: 'Asistencia hoy', value: stats.value.asistenciaHoy, icon: CheckCircleIcon },
-  { label: 'Alertas activas', value: stats.value.alertasActivas, icon: AlertCircleIcon },
+  { label: 'Estudiantes', value: stats.value.totalEstudiantes, icon: UsersIcon, color: 'blue' as const },
+  { label: 'Secciones', value: stats.value.totalSecciones, icon: LayoutGridIcon, color: 'green' as const },
+  { label: 'Asistencia hoy', value: stats.value.asistenciaHoy, icon: CheckCircleIcon, color: 'yellow' as const },
+  { label: 'Alertas activas', value: stats.value.alertasActivas, icon: AlertCircleIcon, color: 'red' as const },
 ]);
 
 onMounted(async () => {

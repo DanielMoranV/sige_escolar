@@ -11,6 +11,9 @@ import { AsistenciaModule } from './modules/asistencia/asistencia.module';
 import { ApoderadosModule } from './modules/apoderados/apoderados.module';
 import { ExoneracionesModule } from './modules/exoneraciones/exoneraciones.module';
 import { NotasModule } from './modules/notas/notas.module';
+import { ReportesModule } from './modules/reportes/reportes.module';
+import { CierreModule } from './modules/cierre/cierre.module';
+import { SiagieModule } from './modules/siagie/siagie.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { NotasModule } from './modules/notas/notas.module';
     ApoderadosModule,
     ExoneracionesModule,
     NotasModule,
+    ReportesModule,
+    CierreModule,
+    SiagieModule,
   ],
 })
 export class AppModule {}
