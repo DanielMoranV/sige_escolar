@@ -35,20 +35,49 @@
         <span class="text-xs text-gray-500">{{ authStore.user?.email }}</span>
       </div>
       <span v-else class="text-sm text-gray-500">{{ authStore.user?.email }}</span>
+
+      <button
+        @click="showLogoutModal = true"
+        class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        title="Cerrar sesión"
+      >
+        <LogOutIcon class="w-5 h-5" />
+      </button>
     </div>
   </header>
+
+  <BaseModal :show="showLogoutModal" title="Cerrar sesión" @close="showLogoutModal = false">
+    <p class="text-sm text-gray-600">¿Está seguro de que desea cerrar la sesión?</p>
+    <template #footer>
+      <div class="flex justify-end gap-3">
+        <BaseButton variant="secondary" @click="showLogoutModal = false">Cancelar</BaseButton>
+        <BaseButton variant="danger" @click="handleLogout">Cerrar sesión</BaseButton>
+      </div>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { LogOutIcon } from 'lucide-vue-next';
 import { useAuthStore } from '../../stores/auth.store';
 import { useNivelStore } from '../../stores/nivel.store';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import BaseModal from '../ui/BaseModal.vue';
+import BaseButton from '../ui/BaseButton.vue';
 
 const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
 const nivelStore = useNivelStore();
+const showLogoutModal = ref(false);
+
+async function handleLogout() {
+  showLogoutModal.value = false;
+  await authStore.logout();
+  router.push('/login');
+}
 
 const NIVEL_CONFIG: Record<string, { label: string; activeClass: string }> = {
   TODOS:      { label: 'Todos',      activeClass: 'border-gray-400 text-gray-700 bg-gray-100' },

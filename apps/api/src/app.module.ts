@@ -15,6 +15,7 @@ import { ReportesModule } from './modules/reportes/reportes.module';
 import { CierreModule } from './modules/cierre/cierre.module';
 import { SiagieModule } from './modules/siagie/siagie.module';
 import { PortalModule } from './modules/portal/portal.module';
+import { DocentesModule } from './modules/docentes/docentes.module';
 import { JobsModule } from './jobs/jobs.module';
 
 @Module({
@@ -35,6 +36,7 @@ import { JobsModule } from './jobs/jobs.module';
     CierreModule,
     SiagieModule,
     PortalModule,
+    DocentesModule,
     JobsModule,
   ],
 })

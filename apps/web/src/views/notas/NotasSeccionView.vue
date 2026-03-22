@@ -262,7 +262,13 @@ async function cargarGrilla() {
   }
 }
 
-function markChanges() { hasChanges.value = true; }
+let autoSaveDebounce: ReturnType<typeof setTimeout> | null = null;
+function markChanges() {
+  hasChanges.value = true;
+  if (periodoCerrado.value) return;
+  if (autoSaveDebounce) clearTimeout(autoSaveDebounce);
+  autoSaveDebounce = setTimeout(() => saveAll(), 5000);
+}
 
 async function saveAll() {
   if (!grillaData.value || !hasChanges.value) return;
@@ -291,14 +297,7 @@ async function saveAll() {
   }
 }
 
-let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
-watch(hasChanges, (val) => {
-  if (val && !periodoCerrado.value) {
-    if (autoSaveTimer) clearTimeout(autoSaveTimer);
-    autoSaveTimer = setTimeout(() => saveAll(), 5000);
-  }
-});
-onBeforeUnmount(() => { if (autoSaveTimer) clearTimeout(autoSaveTimer); });
+onBeforeUnmount(() => { if (autoSaveDebounce) clearTimeout(autoSaveDebounce); });
 
 async function handleExport() {
   isExporting.value = true;

@@ -11,6 +11,7 @@ import { reportesRoutes } from './routes/reportes.routes';
 import { cierreRoutes } from './routes/cierre.routes';
 import { siagieRoutes } from './routes/siagie.routes';
 import { portalRoutes } from './routes/portal.routes';
+import { docentesRoutes } from './routes/docentes.routes';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -29,6 +30,7 @@ const router = createRouter({
           component: () => import('../views/dashboard/DashboardView.vue'),
         },
         ...configRoutes,
+        ...docentesRoutes,
         ...estudiantesRoutes,
         ...matriculasRoutes,
         ...asistenciaRoutes,

@@ -490,7 +490,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { CalendarIcon, ClockIcon, LayoutGridIcon, InfoIcon, PlusIcon, EditIcon, EyeIcon, EyeOffIcon, ChevronDownIcon } from 'lucide-vue-next';
 import { schoolConfigService } from '../../api/services/school-config.service';
 import { useNivelStore } from '../../stores/nivel.store';
@@ -643,13 +643,16 @@ const areasFiltradas = computed(() =>
   todasLasAreas.value.filter(a => a.nivel === nivelActivo.value)
 );
 
+watch(niveles, (newNiveles) => {
+  if (!nivelActivo.value && newNiveles.length > 0) {
+    nivelActivo.value = newNiveles[0];
+  }
+});
+
 async function loadCurriculo() {
   curriculoLoading.value = true;
   try {
     todasLasAreas.value = await schoolConfigService.getAllAreas();
-    if (!nivelActivo.value && niveles.value.length > 0) {
-      nivelActivo.value = niveles.value[0];
-    }
   } catch {
     toast.error('Error al cargar el currículo');
   } finally {

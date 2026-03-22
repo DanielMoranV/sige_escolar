@@ -67,20 +67,17 @@ export class ReportesService {
       return acc;
     }, []);
 
-    // 5. Asistencia (resumen)
+    // 5. Asistencia (resumen del periodo)
     const asistencia = await this.prisma.$queryRawUnsafe<any[]>(`
-      SELECT 
+      SELECT
         COUNT(CASE WHEN estado = 'PRESENTE' THEN 1 END)::int as presentes,
         COUNT(CASE WHEN estado = 'TARDANZA' THEN 1 END)::int as tardanzas,
         COUNT(CASE WHEN estado = 'FALTA_JUSTIFICADA' THEN 1 END)::int as faltas_justificadas,
         COUNT(CASE WHEN estado = 'FALTA_INJUSTIFICADA' THEN 1 END)::int as faltas_injustificadas
       FROM "${slug}".asistencia_diaria
       WHERE matricula_id = '${matriculaId}'
-        AND EXTRACT(MONTH FROM fecha) IN (
-          SELECT EXTRACT(MONTH FROM fecha) 
-          FROM "${slug}".calendario_escolar 
-          WHERE anio_escolar_id = (SELECT anio_escolar_id FROM "${slug}".periodos WHERE id = '${periodoId}')
-        )
+        AND fecha BETWEEN (SELECT fecha_inicio FROM "${slug}".periodos WHERE id = '${periodoId}')
+                      AND (SELECT fecha_fin   FROM "${slug}".periodos WHERE id = '${periodoId}')
     `);
 
     return {

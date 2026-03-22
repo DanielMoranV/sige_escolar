@@ -35,46 +35,24 @@
       </template>
     </nav>
 
-    <!-- User info + logout -->
+    <!-- User info -->
     <div class="border-t border-blue-800 p-3">
-      <div v-if="!uiStore.sidebarCollapsed" class="mb-2 px-2">
+      <div v-if="!uiStore.sidebarCollapsed" class="px-2">
         <p class="text-blue-100 text-sm font-medium truncate">{{ authStore.fullName }}</p>
         <p class="text-blue-300 text-xs">{{ formatRol(authStore.user?.rol) }}</p>
       </div>
-      <button
-        @click="showLogoutModal = true"
-        class="flex items-center gap-2 w-full px-2 py-2 rounded text-blue-200 hover:text-white hover:bg-blue-800 transition-colors"
-        :title="uiStore.sidebarCollapsed ? 'Cerrar sesión' : undefined"
-      >
-        <LogOutIcon class="w-5 h-5 shrink-0" />
-        <span v-if="!uiStore.sidebarCollapsed" class="text-sm">Cerrar sesión</span>
-      </button>
     </div>
   </aside>
-
-  <BaseModal :show="showLogoutModal" title="Cerrar sesión" @close="showLogoutModal = false">
-    <p class="text-sm text-gray-600">¿Está seguro de que desea cerrar la sesión?</p>
-    <template #footer>
-      <div class="flex justify-end gap-3">
-        <BaseButton variant="secondary" @click="showLogoutModal = false">Cancelar</BaseButton>
-        <BaseButton variant="danger" @click="handleLogout">Cerrar sesión</BaseButton>
-      </div>
-    </template>
-  </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import BaseModal from '../ui/BaseModal.vue';
-import BaseButton from '../ui/BaseButton.vue';
+import { computed } from 'vue';
 import { useAuthStore } from '../../stores/auth.store';
 import { useUiStore } from '../../stores/ui.store';
 import SidebarItem from './SidebarItem.vue';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  LogOutIcon,
   LayoutDashboardIcon,
   SettingsIcon,
   UsersIcon,
@@ -84,12 +62,11 @@ import {
   FileTextIcon,
   ArchiveIcon,
   UploadCloudIcon,
+  BookUserIcon,
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
 const uiStore = useUiStore();
-const router = useRouter();
-const showLogoutModal = ref(false);
 
 const menuItems = computed(() => {
   if (authStore.user?.rol === 'APODERADO') {
@@ -113,6 +90,7 @@ const menuItems = computed(() => {
 
   if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
     items.push({ type: 'separator', label: 'Dirección' });
+    items.push({ label: 'Docentes', path: '/docentes', icon: BookUserIcon });
     items.push({ label: 'SIAGIE', path: '/siagie', icon: UploadCloudIcon });
     items.push({ label: 'Cierre de Año', path: '/cierre', icon: ArchiveIcon });
     items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
@@ -135,9 +113,5 @@ function formatRol(rol?: string): string {
   return mapa[rol ?? ''] ?? rol ?? '';
 }
 
-async function handleLogout() {
-  showLogoutModal.value = false;
-  await authStore.logout();
-  router.push('/login');
-}
+
 </script>

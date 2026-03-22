@@ -71,7 +71,7 @@ export class NotasService {
 
     for (const nota of notas) {
       const literal = nota.calificativoLiteral ? `'${nota.calificativoLiteral}'::"${slug}".calificativo_literal` : 'NULL';
-      const numerico = nota.calificativoNumerico !== undefined ? nota.calificativoNumerico : 'NULL';
+      const numerico = (nota.calificativoNumerico !== undefined && nota.calificativoNumerico !== null) ? nota.calificativoNumerico : 'NULL';
       const conclusion = nota.conclusionDescriptiva ? `'${nota.conclusionDescriptiva.replace(/'/g, "''")}'` : 'NULL';
 
       await this.prisma.$executeRawUnsafe(`
