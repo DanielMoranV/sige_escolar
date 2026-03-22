@@ -23,6 +23,7 @@
 import { ref, onMounted } from 'vue';
 import { useQueryClient } from '@tanstack/vue-query';
 import apiClient from '../../api/client';
+import { hoyLima } from '../../utils/date';
 import BaseInput from './BaseInput.vue';
 import BaseSelect from './BaseSelect.vue';
 import BaseButton from './BaseButton.vue';
@@ -39,7 +40,7 @@ const form = ref({
   areaIeId: '',
   tipo: 'RELIGION',
   motivo: '',
-  fechaSolicitud: new Date().toISOString().split('T')[0],
+  fechaSolicitud: hoyLima(),
 });
 
 const tipos = [

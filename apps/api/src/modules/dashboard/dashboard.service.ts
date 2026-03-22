@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { getLimaDateString } from '../../common/utils/date.util';
 
 @Injectable()
 export class DashboardService {
@@ -8,7 +9,7 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getStats(slug: string, anioEscolarId: string) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLimaDateString();
 
     // Count estudiantes from matriculas with state 'ACTIVA'
     const estudiantesResult = await this.prisma.$queryRawUnsafe<any[]>(

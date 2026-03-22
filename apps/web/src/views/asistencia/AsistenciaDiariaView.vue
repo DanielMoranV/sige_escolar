@@ -207,6 +207,7 @@ import { useRouter } from 'vue-router';
 import { SaveIcon, CheckCircleIcon, AlertCircleIcon, UsersIcon, RefreshCwIcon, ClipboardXIcon, CalendarDaysIcon } from 'lucide-vue-next';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { hoyLima } from '../../utils/date';
 import { useAuthStore } from '../../stores/auth.store';
 import { useNivelStore } from '../../stores/nivel.store';
 import { useToast } from '../../composables/useToast';
@@ -241,7 +242,7 @@ const seccionesOptions = computed(() =>
 );
 
 const selectedSeccion = ref('');
-const selectedFecha = ref(new Date().toISOString().split('T')[0]);
+const selectedFecha = ref(hoyLima());
 const anioFechaInicio = ref('');
 const anioFechaFin = ref('');
 const asistenciaData = ref<any[]>([]);
@@ -300,7 +301,7 @@ onMounted(async () => {
     anioFechaInicio.value = anio.fecha_inicio.substring(0, 10);
     anioFechaFin.value = anio.fecha_fin.substring(0, 10);
     // Ajustar la fecha seleccionada si está fuera del rango
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = hoyLima();
     if (hoy < anioFechaInicio.value) selectedFecha.value = anioFechaInicio.value;
     else if (hoy > anioFechaFin.value) selectedFecha.value = anioFechaFin.value;
   }

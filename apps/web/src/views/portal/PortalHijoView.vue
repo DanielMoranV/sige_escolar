@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { portalService } from '@/api/services/portal.service';
+import { formatFecha } from '@/utils/date';
 import StatCard from '@/components/ui/StatCard.vue';
 import BaseBadge from '@/components/ui/BaseBadge.vue';
 import { 
@@ -112,7 +113,7 @@ const getEstadoClass = (estado: string) => {
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="reg in asistencia?.historialReciente" :key="reg.fecha">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ new Date(reg.fecha).toLocaleDateString() }}
+                  {{ formatFecha(reg.fecha) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <BaseBadge :variant="getEstadoClass(reg.estado)">

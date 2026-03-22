@@ -141,6 +141,7 @@ import { useRouter } from 'vue-router';
 import { useQueryClient } from '@tanstack/vue-query';
 import { ArrowLeftIcon, ArrowRightIcon, SearchIcon, InfoIcon, CheckCircleIcon, AlertTriangleIcon } from 'lucide-vue-next';
 import { estudiantesService } from '../../api/services/estudiantes.service';
+import { hoyLima } from '../../utils/date';
 import { useToast } from '../../composables/useToast';
 import BaseInput from '../../components/ui/BaseInput.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
@@ -221,14 +222,16 @@ async function validateDni() {
 function validarFechaNacimiento(fecha: string): string | null {
   if (!fecha) return 'La fecha de nacimiento es obligatoria.';
 
-  const d = new Date(fecha);
-  if (isNaN(d.getTime())) return 'La fecha de nacimiento no es válida.';
+  const hoyStr = hoyLima();
+  if (fecha >= hoyStr) return 'La fecha de nacimiento no puede ser hoy ni una fecha futura.';
 
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  if (d >= hoy) return 'La fecha de nacimiento no puede ser hoy ni una fecha futura.';
+  // Parse as local dates (split to avoid UTC off-by-one from new Date('YYYY-MM-DD'))
+  const [fy, fm, fd] = fecha.split('-').map(Number);
+  const [hy, hm, hd] = hoyStr.split('-').map(Number);
+  const fechaDate = new Date(fy, fm - 1, fd);
+  const hoyLocal = new Date(hy, hm - 1, hd);
 
-  const anios = (hoy.getTime() - d.getTime()) / (365.25 * 24 * 3600 * 1000);
+  const anios = (hoyLocal.getTime() - fechaDate.getTime()) / (365.25 * 24 * 3600 * 1000);
   if (anios < 2) return 'La fecha indica menos de 2 años de edad. Verifique.';
   if (anios > 25) return 'La fecha indica más de 25 años de edad. Verifique.';
 

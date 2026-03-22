@@ -117,6 +117,7 @@ import { ArrowLeftIcon, ArrowRightIcon, SearchIcon } from 'lucide-vue-next';
 import { estudiantesService } from '../../api/services/estudiantes.service';
 import { matriculasService } from '../../api/services/matriculas.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { hoyLima } from '../../utils/date';
 import { useToast } from '../../composables/useToast';
 import BaseInput from '../../components/ui/BaseInput.vue';
 import BaseSelect from '../../components/ui/BaseSelect.vue';
@@ -140,7 +141,7 @@ const form = ref({
   anioEscolarId: '',
   tipoMatricula: 'CONTINUIDAD',
   condicionMatricula: 'PROMOVIDO',
-  fechaMatricula: new Date().toISOString().split('T')[0],
+  fechaMatricula: hoyLima(),
   fechaInicio: '',
   ieProcedencia: '',
   codigoModularProcedencia: '',

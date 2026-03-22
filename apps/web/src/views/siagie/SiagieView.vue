@@ -33,8 +33,8 @@
           </template>
           <template #cell-fechas="{ row }">
             <div class="text-xs text-gray-600">
-              <p><strong>Exportado:</strong> {{ new Date(row.exportado_en).toLocaleString() }}</p>
-              <p v-if="row.cargado_en"><strong>Cargado:</strong> {{ new Date(row.cargado_en).toLocaleString() }}</p>
+              <p><strong>Exportado:</strong> {{ formatFechaHora(row.exportado_en) }}</p>
+              <p v-if="row.cargado_en"><strong>Cargado:</strong> {{ formatFechaHora(row.cargado_en) }}</p>
             </div>
           </template>
           <template #cell-acciones="{ row }">
@@ -134,6 +134,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { DownloadIcon, InfoIcon, LockIcon } from 'lucide-vue-next';
 import { siagieService } from '../../api/services/siagie.service';
+import { formatFechaHora, mesActualLima } from '../../utils/date';
 import { notasService } from '../../api/services/notas.service';
 import { asistenciaService } from '../../api/services/asistencia.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
@@ -243,7 +244,7 @@ async function guardarConfirmacion() {
 }
 
 // --- Exportar Asistencia ---
-const selectedMes = ref((new Date().getMonth() + 1).toString());
+const selectedMes = ref(mesActualLima().toString());
 const selectedSeccion = ref('');
 const isExportingAsistencia = ref(false);
 

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { AsistenciaService } from '../modules/asistencia/asistencia.service';
+import { getLimaDateString } from '../common/utils/date.util';
 
 @Injectable()
 export class AttendanceJob {
@@ -24,7 +25,7 @@ export class AttendanceJob {
         const slug = tenant.schema_name;
         
         // 2. Vencer justificaciones que pasaron el plazo
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLimaDateString();
         await this.prisma.$executeRawUnsafe(`
           UPDATE "${slug}".justificaciones
           SET estado = 'VENCIDA'::"${slug}".estado_justificacion

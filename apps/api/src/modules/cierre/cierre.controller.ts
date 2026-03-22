@@ -12,7 +12,7 @@ export class CierreController {
   constructor(private readonly cierreService: CierreService) {}
 
   @Post('calcular/:anioEscolarId')
-  @Roles('DIRECTOR')
+  @Roles('DIRECTOR', 'SUPER_ADMIN')
   calcularCierre(
     @Headers('x-tenant-slug') slug: string,
     @Param('anioEscolarId') anioEscolarId: string,
@@ -22,7 +22,7 @@ export class CierreController {
   }
 
   @Get('resultado/:anioEscolarId')
-  @Roles('DIRECTOR', 'SECRETARIA')
+  @Roles('DIRECTOR', 'SECRETARIA', 'SUPER_ADMIN')
   getResultado(
     @Headers('x-tenant-slug') slug: string,
     @Param('anioEscolarId') anioEscolarId: string,
@@ -32,7 +32,7 @@ export class CierreController {
   }
 
   @Patch('caso-especial/:matriculaId')
-  @Roles('DIRECTOR')
+  @Roles('DIRECTOR', 'SUPER_ADMIN')
   setCasoEspecial(
     @Headers('x-tenant-slug') slug: string,
     @Param('matriculaId') matriculaId: string,
@@ -42,7 +42,7 @@ export class CierreController {
   }
 
   @Post('export/excel/:anioEscolarId')
-  @Roles('DIRECTOR')
+  @Roles('DIRECTOR', 'SUPER_ADMIN')
   async exportExcel(
     @Headers('x-tenant-slug') slug: string,
     @Param('anioEscolarId') anioEscolarId: string,

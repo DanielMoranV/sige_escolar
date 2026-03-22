@@ -44,6 +44,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { DownloadIcon, InfoIcon } from 'lucide-vue-next';
 import { asistenciaService } from '../../api/services/asistencia.service';
+import { mesActualLima } from '../../utils/date';
 import { schoolConfigService } from '../../api/services/school-config.service';
 import { useNivelStore } from '../../stores/nivel.store';
 import { useToast } from '../../composables/useToast';
@@ -53,7 +54,7 @@ import BaseSelect from '../../components/ui/BaseSelect.vue';
 const toast = useToast();
 const nivelStore = useNivelStore();
 
-const selectedMes = ref((new Date().getMonth() + 1).toString());
+const selectedMes = ref(mesActualLima().toString());
 const selectedSeccion = ref('');
 const rawSecciones = ref<any[]>([]);
 const seccionesOptions = computed(() => {

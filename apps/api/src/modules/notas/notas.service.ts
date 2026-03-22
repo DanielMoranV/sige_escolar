@@ -37,11 +37,13 @@ export class NotasService {
       AND competencia_ie_id IN (SELECT id FROM "${slug}".competencias_ie WHERE area_ie_id = '${areaId}')
     `);
 
-    // 4. Obtener conclusiones del periodo (de cualquier área) para mostrar la conclusión global
+    // 4. Obtener conclusión descriptiva del área actual (solo competencias de esta área)
     const conclusiones = await this.prisma.$queryRawUnsafe<any[]>(`
       SELECT DISTINCT ON (matricula_id) matricula_id, conclusion_descriptiva
       FROM "${slug}".notas_periodo
-      WHERE periodo_id = '${periodoId}' AND conclusion_descriptiva IS NOT NULL
+      WHERE periodo_id = '${periodoId}'
+        AND competencia_ie_id IN (SELECT id FROM "${slug}".competencias_ie WHERE area_ie_id = '${areaId}')
+        AND conclusion_descriptiva IS NOT NULL
       ORDER BY matricula_id, ultima_modificacion DESC
     `);
 

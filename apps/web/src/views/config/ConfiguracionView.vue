@@ -493,6 +493,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { CalendarIcon, ClockIcon, LayoutGridIcon, InfoIcon, PlusIcon, EditIcon, EyeIcon, EyeOffIcon, ChevronDownIcon } from 'lucide-vue-next';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { formatFecha } from '../../utils/date';
 import { useNivelStore } from '../../stores/nivel.store';
 import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
@@ -536,8 +537,7 @@ async function loadGeneral() {
 }
 
 function formatDate(dateStr: string) {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' });
+  return formatFecha(dateStr, { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 function nivelClass(nivel: string) {

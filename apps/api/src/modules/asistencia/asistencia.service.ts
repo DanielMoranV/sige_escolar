@@ -3,6 +3,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { ExcelService } from '../siagie/excel.service';
 import { CreateAsistenciaBulkDto, AsistenciaItemDto } from './dto/create-asistencia-bulk.dto';
 import { CreateJustificacionDto, ReviewJustificacionDto } from './dto/justificacion.dto';
+import { getLimaDateString } from '../../common/utils/date.util';
 
 @Injectable()
 export class AsistenciaService {
@@ -87,9 +88,9 @@ export class AsistenciaService {
   }
 
   async createJustificacion(slug: string, dto: CreateJustificacionDto) {
-    const plazo = new Date();
-    plazo.setDate(plazo.getDate() + 5); // 5 días de plazo
-    const plazoStr = plazo.toISOString().split('T')[0];
+    const plazoDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Lima' }));
+    plazoDate.setDate(plazoDate.getDate() + 5); // 5 días de plazo
+    const plazoStr = plazoDate.toLocaleDateString('en-CA');
 
     const result = await this.prisma.$queryRawUnsafe<any[]>(`
       INSERT INTO "${slug}".justificaciones 
@@ -185,7 +186,7 @@ export class AsistenciaService {
     const contarTardanzas = config.contar_tardanzas === true || config.contar_tardanzas === 'true';
 
     // 2. Obtener días lectivos transcurridos hasta hoy
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLimaDateString();
     const diasResult = await this.prisma.$queryRawUnsafe<any[]>(`
       SELECT COUNT(*) as count FROM "${slug}".calendario_escolar
       WHERE anio_escolar_id = '${anioEscolarId}' AND tipo_dia = 'LECTIVO' AND fecha <= '${today}'

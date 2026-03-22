@@ -288,7 +288,7 @@ async function saveAll() {
     };
     await notasService.saveGrilla(payload);
     hasChanges.value = false;
-    lastSaved.value = new Date().toLocaleTimeString();
+    lastSaved.value = new Date().toLocaleTimeString('es-PE', { timeZone: 'America/Lima' });
     toast.success('Notas guardadas correctamente');
   } catch {
     toast.error('Error al guardar las notas');

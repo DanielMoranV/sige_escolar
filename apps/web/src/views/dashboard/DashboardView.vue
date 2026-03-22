@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div>
       <h2 class="text-2xl font-bold text-gray-900">Bienvenido, {{ authStore.user?.nombres }}</h2>
-      <p class="text-gray-500 text-sm mt-1">Panel de gestión escolar — {{ new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</p>
+      <p class="text-gray-500 text-sm mt-1">Panel de gestión escolar — {{ new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Lima' }) }}</p>
     </div>
 
     <!-- Stat Cards -->

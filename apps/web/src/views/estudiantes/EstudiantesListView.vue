@@ -51,7 +51,7 @@
         </template>
 
         <template #cell-fecha_nacimiento="{ row }">
-          {{ row.fecha_nacimiento ? new Date(row.fecha_nacimiento).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—' }}
+          {{ formatFecha(row.fecha_nacimiento) }}
         </template>
 
         <template #cell-acciones="{ row }">
@@ -110,6 +110,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { PlusIcon, SearchIcon, EyeIcon, EditIcon, TrashIcon } from 'lucide-vue-next';
 import { estudiantesService } from '../../api/services/estudiantes.service';
 import { useToast } from '../../composables/useToast';
+import { formatFecha } from '../../utils/date';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
 import BasePagination from '../../components/ui/BasePagination.vue';

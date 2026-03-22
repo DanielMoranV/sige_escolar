@@ -40,7 +40,7 @@
         </template>
 
         <template #cell-fecha_matricula="{ row }">
-          {{ row.fecha_matricula ? new Date(row.fecha_matricula).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—' }}
+          {{ formatFecha(row.fecha_matricula) }}
         </template>
 
         <template #cell-estado="{ row }">
@@ -96,6 +96,7 @@ import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { UserPlusIcon, UserMinusIcon, EyeIcon } from 'lucide-vue-next';
 import { matriculasService } from '../../api/services/matriculas.service';
 import { schoolConfigService } from '../../api/services/school-config.service';
+import { hoyLima, formatFecha } from '../../utils/date';
 import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseTable from '../../components/ui/BaseTable.vue';
@@ -189,11 +190,11 @@ function estadoVariant(estado: string) {
 const showRetiroModal = ref(false);
 const selectedMatricula = ref<any>(null);
 const isRetiring = ref(false);
-const retiroForm = ref({ fechaRetiro: new Date().toISOString().split('T')[0], motivo: '' });
+const retiroForm = ref({ fechaRetiro: hoyLima(), motivo: '' });
 
 function confirmRetiro(item: any) {
   selectedMatricula.value = item;
-  retiroForm.value = { fechaRetiro: new Date().toISOString().split('T')[0], motivo: '' };
+  retiroForm.value = { fechaRetiro: hoyLima(), motivo: '' };
   showRetiroModal.value = true;
 }
 

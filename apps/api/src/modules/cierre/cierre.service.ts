@@ -25,20 +25,24 @@ export class CierreService {
 
     // 2. Por cada matrícula, evaluar las notas finales de las áreas usando el Motor de Promoción
     for (const matricula of matriculas) {
-      const { resultado, areasRecuperacion } = await this.promocionService.calcularResultadoMatricula(
-        slug, 
-        matricula.id, 
-        matricula.nivel, 
-        matricula.numero
+      const { resultado, areasRecuperacion, promediosAreas } = await this.promocionService.calcularResultadoMatricula(
+        slug,
+        matricula.id,
+        matricula.nivel,
+        matricula.numero,
       );
 
+      const promediosJson = JSON.stringify(promediosAreas).replace(/'/g, "''");
+      const recuperacionJson = JSON.stringify(areasRecuperacion).replace(/'/g, "''");
+
       await this.prisma.$executeRawUnsafe(`
-        INSERT INTO "${slug}".cierre_anio 
+        INSERT INTO "${slug}".cierre_anio
           (matricula_id, resultado, promedios_areas, areas_recuperacion, calculado_en, calculado_por)
-        VALUES 
-          ('${matricula.id}', '${resultado}'::"${slug}".resultado_anio, '{}', '${JSON.stringify(areasRecuperacion)}', NOW(), '${usuarioId}')
+        VALUES
+          ('${matricula.id}', '${resultado}'::"${slug}".resultado_anio, '${promediosJson}'::jsonb, '${recuperacionJson}'::jsonb, NOW(), '${usuarioId}')
         ON CONFLICT (matricula_id) DO UPDATE SET
           resultado = EXCLUDED.resultado,
+          promedios_areas = EXCLUDED.promedios_areas,
           areas_recuperacion = EXCLUDED.areas_recuperacion,
           calculado_en = NOW(),
           calculado_por = EXCLUDED.calculado_por,
@@ -68,11 +72,12 @@ export class CierreService {
   }
 
   async setCasoEspecial(slug: string, matriculaId: string, dto: { resultado: string, justificacion: string }) {
+    const justificacion = dto.justificacion.replace(/'/g, "''");
     await this.prisma.$executeRawUnsafe(`
       UPDATE "${slug}".cierre_anio
       SET resultado = '${dto.resultado}'::"${slug}".resultado_anio,
           es_caso_especial = true,
-          justificacion_caso = '${dto.justificacion}'
+          justificacion_caso = '${justificacion}'
       WHERE matricula_id = '${matriculaId}'
     `);
     return { message: 'Caso especial registrado' };

@@ -111,6 +111,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeftIcon, UserMinusIcon } from 'lucide-vue-next';
 import { matriculasService } from '../../api/services/matriculas.service';
 import { useToast } from '../../composables/useToast';
+import { hoyLima, formatFecha } from '../../utils/date';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
 import BaseModal from '../../components/ui/BaseModal.vue';
@@ -125,7 +126,7 @@ const isLoading = ref(true);
 const matricula = ref<any>(null);
 const showRetiroModal = ref(false);
 const isRetiring = ref(false);
-const retiroForm = ref({ fechaRetiro: new Date().toISOString().split('T')[0], motivo: '' });
+const retiroForm = ref({ fechaRetiro: hoyLima(), motivo: '' });
 
 onMounted(async () => {
   try {
@@ -162,8 +163,5 @@ function estadoVariant(estado: string) {
   return 'neutral';
 }
 
-function formatDate(dateStr: string) {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
+const formatDate = formatFecha;
 </script>

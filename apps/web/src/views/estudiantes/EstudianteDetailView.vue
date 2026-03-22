@@ -42,7 +42,7 @@
         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
           <h3 class="font-semibold text-gray-900 border-b pb-2">Información Complementaria</h3>
           <div class="text-sm space-y-2">
-            <p><span class="text-gray-500 w-32 inline-block">F. Nacimiento:</span> {{ estudiante.fecha_nacimiento ? new Date(estudiante.fecha_nacimiento).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—' }}</p>
+            <p><span class="text-gray-500 w-32 inline-block">F. Nacimiento:</span> {{ formatFecha(estudiante.fecha_nacimiento) }}</p>
             <p><span class="text-gray-500 w-32 inline-block">Género:</span> {{ estudiante.genero === 'M' ? 'Masculino' : 'Femenino' }}</p>
             <p><span class="text-gray-500 w-32 inline-block">Cód. SIAGIE:</span> {{ estudiante.codigo_siagie || '—' }}</p>
             <p><span class="text-gray-500 w-32 inline-block">Lengua:</span> {{ estudiante.lengua_materna }}</p>
@@ -141,6 +141,7 @@ import { useQuery } from '@tanstack/vue-query';
 import { ArrowLeftIcon, EditIcon, TrashIcon, PlusIcon } from 'lucide-vue-next';
 import apiClient from '../../api/client';
 import { estudiantesService } from '../../api/services/estudiantes.service';
+import { formatFecha } from '../../utils/date';
 import { useToast } from '../../composables/useToast';
 import BaseButton from '../../components/ui/BaseButton.vue';
 import BaseBadge from '../../components/ui/BaseBadge.vue';
