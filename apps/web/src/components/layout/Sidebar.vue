@@ -63,6 +63,7 @@ import {
   ArchiveIcon,
   UploadCloudIcon,
   BookUserIcon,
+  RefreshCwIcon,
 } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
@@ -93,6 +94,7 @@ const menuItems = computed(() => {
     items.push({ label: 'Docentes', path: '/docentes', icon: BookUserIcon });
     items.push({ label: 'SIAGIE', path: '/siagie', icon: UploadCloudIcon });
     items.push({ label: 'Cierre de Año', path: '/cierre', icon: ArchiveIcon });
+    items.push({ label: 'Recuperación', path: '/cierre/recuperacion', icon: RefreshCwIcon });
     items.push({ label: 'Configuración', path: '/configuracion', icon: SettingsIcon });
   }
 

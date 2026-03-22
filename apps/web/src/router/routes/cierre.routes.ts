@@ -5,4 +5,10 @@ export const cierreRoutes = [
     component: () => import('../../views/cierre/CierreAnioView.vue'),
     meta: { requiresAuth: true, roles: ['DIRECTOR', 'SECRETARIA'] },
   },
+  {
+    path: 'cierre/recuperacion',
+    name: 'cierre-recuperacion',
+    component: () => import('../../views/cierre/RecuperacionView.vue'),
+    meta: { requiresAuth: true, roles: ['DIRECTOR', 'SECRETARIA'] },
+  },
 ];

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Headers, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Headers, Query, Res, Put } from '@nestjs/common';
 import { CierreService } from './cierre.service';
 import { GetResultadoQueryDto } from './dto/get-resultado-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -39,6 +39,36 @@ export class CierreController {
     @Body() dto: { resultado: string, justificacion: string },
   ) {
     return this.cierreService.setCasoEspecial(slug, matriculaId, dto);
+  }
+
+  @Get('recuperacion/:anioEscolarId')
+  @Roles('DIRECTOR', 'SECRETARIA', 'SUPER_ADMIN')
+  getRecuperacion(
+    @Headers('x-tenant-slug') slug: string,
+    @Param('anioEscolarId') anioEscolarId: string,
+    @Query() query: GetResultadoQueryDto,
+  ) {
+    return this.cierreService.getRecuperacion(slug, anioEscolarId, query.seccionId);
+  }
+
+  @Put('recuperacion/:matriculaId/area/:areaId')
+  @Roles('DIRECTOR', 'SECRETARIA', 'SUPER_ADMIN')
+  saveNotasRecuperacion(
+    @Headers('x-tenant-slug') slug: string,
+    @Param('matriculaId') matriculaId: string,
+    @Param('areaId') areaId: string,
+    @Body() body: { notas: Record<string, { literal: string | null; numerico: number | null }> },
+  ) {
+    return this.cierreService.saveNotasRecuperacion(slug, matriculaId, areaId, body.notas);
+  }
+
+  @Post('recuperacion/:matriculaId/recalcular')
+  @Roles('DIRECTOR', 'SUPER_ADMIN')
+  recalcularPostRecuperacion(
+    @Headers('x-tenant-slug') slug: string,
+    @Param('matriculaId') matriculaId: string,
+  ) {
+    return this.cierreService.recalcularPostRecuperacion(slug, matriculaId);
   }
 
   @Post('export/excel/:anioEscolarId')
