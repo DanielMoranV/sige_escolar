@@ -14,6 +14,7 @@ import { CreateDocenteDto, UpdateDocenteDto, AsignarDto } from './dto/docente.dt
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('docentes')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,6 +24,15 @@ export class DocentesController {
   @Get()
   getAll(@Headers('x-tenant-slug') slug: string) {
     return this.docentesService.getAll(slug);
+  }
+
+  @Get('mis-asignaciones')
+  @Roles('DOCENTE_TUTOR', 'DOCENTE_AREA', 'DIRECTOR', 'SUPER_ADMIN')
+  getMisAsignaciones(
+    @Headers('x-tenant-slug') slug: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.docentesService.getMisAsignaciones(slug, user.id);
   }
 
   @Get(':id/asignaciones')

@@ -17,6 +17,10 @@ export const notasService = {
     const { data } = await apiClient.post('notas/cerrar-periodo', payload);
     return data.data;
   },
+  async reabrirPeriodo(payload: { periodoId: string; seccionId: string }) {
+    const { data } = await apiClient.post('notas/reabrir-periodo', payload);
+    return data.data;
+  },
   async exportSiagie(params: { periodoId: string; seccionId: string }) {
     const response = await apiClient.get('notas/export/siagie', { 
       params,

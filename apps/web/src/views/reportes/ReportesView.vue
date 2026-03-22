@@ -26,15 +26,18 @@
       <LibretasTab v-if="activeTab === 'libretas'" />
       <RendimientoTab v-else-if="activeTab === 'rendimiento'" />
       <ConfiguracionPDFTab v-else-if="activeTab === 'config'" />
+      <ActasTab v-if="activeTab === 'actas'" :secciones-options="seccionesOptions" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import LibretasTab from './tabs/LibretasTab.vue';
 import RendimientoTab from './tabs/RendimientoTab.vue';
 import ConfiguracionPDFTab from './tabs/ConfiguracionPDFTab.vue';
+import ActasTab from './tabs/ActasTab.vue';
+import { schoolConfigService } from '../../api/services/school-config.service';
 
 const activeTab = ref('libretas');
 
@@ -42,5 +45,19 @@ const tabs = [
   { id: 'libretas', label: 'Libretas de Notas' },
   { id: 'rendimiento', label: 'Rendimiento Académico' },
   { id: 'config', label: 'Configuración PDF' },
+  { id: 'actas', label: 'Actas de Cierre' },
 ];
+
+const rawSecciones = ref<any[]>([]);
+const seccionesOptions = computed(() =>
+  rawSecciones.value.map((s: any) => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id }))
+);
+
+onMounted(async () => {
+  try {
+    rawSecciones.value = await schoolConfigService.getSecciones();
+  } catch {
+    // non-critical
+  }
+});
 </script>

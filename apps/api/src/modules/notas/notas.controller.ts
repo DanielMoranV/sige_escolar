@@ -49,6 +49,16 @@ export class NotasController {
     return this.notasService.cerrarPeriodo(slug, periodoId, seccionId, user.id);
   }
 
+  @Post('reabrir-periodo')
+  @Roles('DIRECTOR', 'SUPER_ADMIN')
+  reabrirPeriodo(
+    @Headers('x-tenant-slug') slug: string,
+    @Body('periodoId') periodoId: string,
+    @Body('seccionId') seccionId: string,
+  ) {
+    return this.notasService.reabrirPeriodo(slug, periodoId, seccionId);
+  }
+
   @Get('export/siagie')
   @Roles('DIRECTOR')
   async exportarSiagie(

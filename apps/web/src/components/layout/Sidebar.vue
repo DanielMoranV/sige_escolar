@@ -54,6 +54,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   LayoutDashboardIcon,
+  LayoutGridIcon,
   SettingsIcon,
   UsersIcon,
   UserPlusIcon,
@@ -88,6 +89,10 @@ const menuItems = computed(() => {
     { label: 'Notas', path: '/notas', icon: GraduationCapIcon },
     { label: 'Reportes', path: '/reportes', icon: FileTextIcon },
   ];
+
+  if (authStore.user?.rol === 'DOCENTE_TUTOR' || authStore.user?.rol === 'DOCENTE_AREA') {
+    items.splice(1, 0, { label: 'Mis Secciones', path: '/mis-secciones', icon: LayoutGridIcon });
+  }
 
   if (authStore.user?.rol === 'DIRECTOR' || authStore.user?.rol === 'SUPER_ADMIN') {
     items.push({ type: 'separator', label: 'Dirección' });

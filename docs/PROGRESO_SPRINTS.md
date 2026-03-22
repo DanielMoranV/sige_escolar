@@ -263,11 +263,11 @@ Este documento compara el estado actual del proyecto contra el plan de sprints d
 | Sprint 1 | Panel superadmin (apps/admin) | ✅ Completado |
 | Sprint 2 | Auth + configuración inicial | ✅ Completado |
 | Sprint 3 | Estudiantes y matrícula | ✅ Completado |
-| Sprint 4 | Asistencia | 🔶 ~85% — falta `JustificacionesJob` y módulo de calendario |
-| Sprint 5 | Notas | 🔶 ~85% — falta `NotasEstudianteView` y reabrir período |
-| Sprint 6 | Reportes y PDF | 🔶 ~50% — falta lote, envío y reportes de actas/nómina |
-| Sprint 7 | Cierre de año + SIAGIE | ✅ Completado (falta `RecuperacionView`) |
-| Sprint 8 | Portal apoderado y docente | 🔶 ~60% — portal apoderado completo, vistas de docente pendientes |
+| Sprint 4 | Asistencia | 🔶 ~90% — `JustificacionesJob` en `AttendanceJob` ✅, falta módulo calendario |
+| Sprint 5 | Notas | 🔶 ~90% — reabrir período ✅, falta `NotasEstudianteView` |
+| Sprint 6 | Reportes y PDF | 🔶 ~70% — PDF lote ✅, Tab Actas ✅, falta envío email/WhatsApp y nómina |
+| Sprint 7 | Cierre de año + SIAGIE | ✅ Completado — `RecuperacionView` ✅ |
+| Sprint 8 | Portal apoderado y docente | 🔶 ~80% — `MisSeccionesView` ✅, falta vistas DOCENTE_AREA |
 | Sprint 9 | Notificaciones y ajustes | ❌ Pendiente |
 
 ---

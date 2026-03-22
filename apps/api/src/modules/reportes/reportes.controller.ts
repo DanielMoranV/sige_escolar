@@ -45,6 +45,37 @@ export class ReportesController {
     res.end(pdfBuffer);
   }
 
+  @Get('libretas/:seccionId/:periodoId/pdf')
+  @Roles('DIRECTOR', 'SECRETARIA', 'SUPER_ADMIN')
+  async getLibretasSeccionPdf(
+    @Headers('x-tenant-slug') slug: string,
+    @Param('seccionId') seccionId: string,
+    @Param('periodoId') periodoId: string,
+    @Res() res: Response,
+  ) {
+    const allData = await this.reportesService.getLibretasSeccionData(slug, seccionId, periodoId);
+    if (!allData.length) {
+      res.status(404).json({ message: 'Sin estudiantes en esta sección' });
+      return;
+    }
+    const pdfBuffer = await this.pdfService.generateLibretasSeccionPdf(allData);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="Libretas_${seccionId}_${periodoId}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+    res.end(pdfBuffer);
+  }
+
+  @Get('acta-borrador/:seccionId')
+  @Roles('DIRECTOR', 'SECRETARIA', 'SUPER_ADMIN')
+  getActaBorrador(
+    @Headers('x-tenant-slug') slug: string,
+    @Param('seccionId') seccionId: string,
+  ) {
+    return this.reportesService.getActaBorradorData(slug, seccionId);
+  }
+
   @Get('rendimiento/seccion/:seccionId')
   @Roles('DIRECTOR', 'SECRETARIA')
   getSeccionRendimiento(

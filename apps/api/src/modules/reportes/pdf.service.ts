@@ -66,6 +66,41 @@ export class PdfService {
     return Buffer.from(pdfBuffer);
   }
 
+  async generateLibretasSeccionPdf(dataList: any[]): Promise<Buffer> {
+    if (!this.browser) {
+      await this.initBrowser();
+    }
+
+    const template = handlebars.compile(libretaTemplate);
+    const htmlParts = dataList.map(data => template({
+      colegio: { nombre: data.estudiante.colegio_nombre },
+      periodo: data.periodo,
+      estudiante: data.estudiante,
+      areas: data.areas,
+      asistencia: {
+        presentes: parseInt(data.asistencia.presentes || '0'),
+        tardanzas: parseInt(data.asistencia.tardanzas || '0'),
+        faltas_justificadas: parseInt(data.asistencia.faltas_justificadas || '0'),
+        faltas_injustificadas: parseInt(data.asistencia.faltas_injustificadas || '0')
+      }
+    }));
+
+    const html = htmlParts.join('<div style="page-break-after: always;"></div>');
+
+    const page = await this.browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
+    });
+
+    await page.close();
+
+    return Buffer.from(pdfBuffer);
+  }
+
   async onModuleDestroy() {
     if (this.browser) {
       await this.browser.close();

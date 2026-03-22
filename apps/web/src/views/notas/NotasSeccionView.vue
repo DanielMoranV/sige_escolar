@@ -132,6 +132,9 @@
             <BaseButton variant="secondary" :loading="isClosing" @click="handleClose" :disabled="!canExport" title="Cerrar Periodo">
               <LockIcon class="w-4 h-4" />
             </BaseButton>
+            <BaseButton v-if="periodoCerrado" variant="secondary" :loading="isReopening" @click="handleReopen" :disabled="!canExport" title="Reabrir Periodo">
+              <UnlockIcon class="w-4 h-4" />
+            </BaseButton>
           </div>
         </div>
 
@@ -148,7 +151,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { SearchIcon, LayoutGridIcon, SaveIcon, LockIcon, DownloadIcon, InfoIcon } from 'lucide-vue-next';
+import { SearchIcon, LayoutGridIcon, SaveIcon, LockIcon, UnlockIcon, DownloadIcon, InfoIcon } from 'lucide-vue-next';
 import { schoolConfigService } from '../../api/services/school-config.service';
 import { notasService } from '../../api/services/notas.service';
 import { useAuthStore } from '../../stores/auth.store';
@@ -227,6 +230,7 @@ const expPeriodosOptions = computed(() => todosPeriodos.value.map(p => ({ label:
 const expSeccionesOptions = computed(() => todasSecciones.value.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id })));
 const isExporting = ref(false);
 const isClosing = ref(false);
+const isReopening = ref(false);
 const canExport = computed(() => expFilters.value.periodoId && expFilters.value.seccionId);
 
 onMounted(async () => {
@@ -328,6 +332,18 @@ async function handleClose() {
     toast.error('Error al cerrar el periodo');
   } finally {
     isClosing.value = false;
+  }
+}
+
+async function handleReopen() {
+  isReopening.value = true;
+  try {
+    await notasService.reabrirPeriodo(expFilters.value);
+    toast.success('Periodo reabierto correctamente');
+  } catch {
+    toast.error('Error al reabrir el periodo');
+  } finally {
+    isReopening.value = false;
   }
 }
 </script>

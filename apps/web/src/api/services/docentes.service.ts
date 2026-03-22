@@ -29,4 +29,9 @@ export const docentesService = {
   async removeAsignacion(id: string) {
     await apiClient.delete(`docentes/asignaciones/${id}`);
   },
+
+  async getMisAsignaciones() {
+    const { data } = await apiClient.get('docentes/mis-asignaciones');
+    return data.data;
+  },
 };

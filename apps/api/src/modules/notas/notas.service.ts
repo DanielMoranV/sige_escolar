@@ -132,6 +132,15 @@ export class NotasService {
     return { message: 'Periodo cerrado correctamente' };
   }
 
+  async reabrirPeriodo(slug: string, periodoId: string, seccionId: string) {
+    await this.prisma.$executeRawUnsafe(`
+      UPDATE "${slug}".cierre_periodo
+      SET estado = 'ACTIVO'::"${slug}".estado_periodo
+      WHERE periodo_id = '${periodoId}' AND seccion_id = '${seccionId}'
+    `);
+    return { message: 'Periodo reabierto correctamente' };
+  }
+
   async exportarSiagie(slug: string, periodoId: string, seccionId: string, usuarioId?: string): Promise<Buffer> {
     const data = await this.prisma.$queryRawUnsafe<any[]>(`
       SELECT

@@ -137,6 +137,15 @@ export class DocentesService {
     }
   }
 
+  async getMisAsignaciones(slug: string, usuarioId: string) {
+    const docente = await this.prisma.$queryRawUnsafe<any[]>(`
+      SELECT id FROM "${slug}".docentes WHERE usuario_id = '${usuarioId}' LIMIT 1
+    `);
+    if (!docente[0]) return [];
+
+    return this.getAsignaciones(slug, docente[0].id);
+  }
+
   async removeAsignacion(slug: string, id: string) {
     await this.prisma.$executeRawUnsafe(
       `DELETE FROM "${slug}".docente_area_seccion WHERE id = '${id}'`

@@ -11,10 +11,14 @@
         label="Grado y Sección"
         :options="seccionesOptions"
       />
-      <div class="flex items-end pb-1">
-        <BaseButton class="w-full" :loading="isLoading" @click="loadEstudiantes" :disabled="!canLoad">
+      <div class="flex items-end pb-1 gap-2">
+        <BaseButton class="flex-1" :loading="isLoading" @click="loadEstudiantes" :disabled="!canLoad">
           <SearchIcon class="w-4 h-4" />
           Ver Estudiantes
+        </BaseButton>
+        <BaseButton v-if="canLoad" variant="secondary" :loading="isDownloadingAll" @click="handleDownloadAll" title="Descargar sección completa">
+          <DownloadIcon class="w-4 h-4" />
+          Descargar sección completa
         </BaseButton>
       </div>
     </div>
@@ -135,6 +139,7 @@ const seccionesOptions = computed(() => {
   return filtered.map(s => ({ label: `${s.grado_nombre} - ${s.nombre}`, value: s.id }));
 });
 const isLoading = ref(false);
+const isDownloadingAll = ref(false);
 const hasLoaded = ref(false);
 const estudiantes = ref<any[]>([]);
 
@@ -184,6 +189,25 @@ async function previewLibreta(matriculaId: string) {
     showPreview.value = false;
   } finally {
     libretaLoading.value = false;
+  }
+}
+
+async function handleDownloadAll() {
+  isDownloadingAll.value = true;
+  try {
+    const blob = await reportesService.descargarLibretasSeccion(seccionId.value, periodoId.value);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Libretas_${seccionId.value}_${periodoId.value}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch {
+    alert('Error al generar las libretas de la sección');
+  } finally {
+    isDownloadingAll.value = false;
   }
 }
 

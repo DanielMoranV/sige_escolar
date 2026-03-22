@@ -88,6 +88,41 @@ export class ReportesService {
     };
   }
 
+  async getLibretasSeccionData(slug: string, seccionId: string, periodoId: string) {
+    const matriculas = await this.prisma.$queryRawUnsafe<any[]>(`
+      SELECT m.id FROM "${slug}".matriculas m
+      WHERE m.seccion_id = '${seccionId}' AND m.estado = 'ACTIVA'
+      ORDER BY (SELECT e.apellido_paterno FROM "${slug}".estudiantes e WHERE e.id = m.estudiante_id),
+               (SELECT e.apellido_materno FROM "${slug}".estudiantes e WHERE e.id = m.estudiante_id)
+    `);
+
+    const results: any[] = [];
+    for (const m of matriculas) {
+      try {
+        const data = await this.getLibretaData(slug, m.id, periodoId);
+        results.push(data);
+      } catch {
+        this.logger.warn(`[${slug}] No se pudo obtener libreta para matrícula ${m.id}`);
+      }
+    }
+    return results;
+  }
+
+  async getActaBorradorData(slug: string, seccionId: string) {
+    return this.prisma.$queryRawUnsafe<any[]>(`
+      SELECT ca.resultado, ca.areas_recuperacion, ca.resultado_recuperacion,
+             e.dni, e.apellido_paterno, e.apellido_materno, e.nombres,
+             s.nombre AS seccion_nombre, g.nombre AS grado_nombre
+      FROM "${slug}".cierre_anio ca
+      JOIN "${slug}".matriculas m ON ca.matricula_id = m.id
+      JOIN "${slug}".estudiantes e ON m.estudiante_id = e.id
+      JOIN "${slug}".secciones s ON m.seccion_id = s.id
+      JOIN "${slug}".grados g ON s.grado_id = g.id
+      WHERE m.seccion_id = '${seccionId}' AND m.estado = 'ACTIVA'
+      ORDER BY e.apellido_paterno, e.apellido_materno
+    `);
+  }
+
   async getSeccionRendimiento(slug: string, seccionId: string) {
     // Resumen de notas por área para la sección
     return this.prisma.$queryRawUnsafe<any[]>(`

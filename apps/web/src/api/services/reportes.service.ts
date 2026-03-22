@@ -15,4 +15,12 @@ export const reportesService = {
     const { data } = await apiClient.get(`reportes/rendimiento/seccion/${seccionId}`);
     return data.data;
   },
+  async descargarLibretasSeccion(seccionId: string, periodoId: string): Promise<Blob> {
+    const response = await apiClient.get(`reportes/libretas/${seccionId}/${periodoId}/pdf`, { responseType: 'blob' });
+    return response.data;
+  },
+  async getActaBorrador(seccionId: string) {
+    const { data } = await apiClient.get(`reportes/acta-borrador/${seccionId}`);
+    return data.data;
+  },
 };
